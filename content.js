@@ -86,7 +86,8 @@ children:[{
 q: `"Can you tell me more about the domains of the projects that you have worked with?"`,
 a:`I have primarily worked in the Healthcare domain for a US-based client. The project deals with healthcare claims data. We receive data from multiple upstream systems containing member information, provider details, claim transactions, diagnosis codes, and payment information.
 
-My role is to build and maintain Databricks-based ETL pipelines that ingest data from PostgreSQL and file-based sources, transform it, and make it available for downstream reporting, analytics, and data science teams.`,
+My role is to build and maintain Databricks-based ETL pipelines that ingest data from PostgreSQL and file-based sources, transform it, and make it available for downstream reporting, analytics, and data science teams.<br>
+https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use this for healthcare notes`,
 children:[
 {
 			q:`"You said healthcare claims. What are the top 5 datasets you process?"`,
