@@ -1,7 +1,28 @@
 const cats = ["All","Story & fit","Technical depth","Salary & logistics","Mindset & growth","Project"];
 const qs = [
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
+	{
+		cat:"Story & fit",
+		q:"Relted links",
+		answer:`<p> Health care domain: 
+             <button onclick="navigator.clipboard.writeText(document.getElementById('copyLine').innerText)">
+        📋 Copy
+    </button>
+    <span id="copyLine">
+       https://prathap-chowdary.github.io/int-prep/healthcare-notes.html 
+    </span> 
+</p>
+<p> Azure related: 
+ <button onclick="navigator.clipboard.writeText(document.getElementById('copyLine').innerText)">
+        📋 Copy
+    </button>
+	 <span id="copyLine">
+       https://prathap-chowdary.github.io/int-prep/healthcare-notes.html 
+    </span>`
+			",
+		children:[],
+	},
+	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
 {
     cat:"Story & fit",
     q:"Tell me about yourself.",
