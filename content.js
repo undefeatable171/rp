@@ -255,7 +255,12 @@ For changed records, we insert a new active version in a second step by identify
 
 
 <pre><code class="language-sql">
-
+-- ------------------------------------------------------------------
+-- Step 1 — Create incoming view with temp staging
+-- ------------------------------------------------------------------
+-- ------------------------------------------------------------------
+-- Step 2 — MERGE to close changed records
+-- ------------------------------------------------------------------
 
 MERGE INTO gold.dim_patient AS tgt
 USING incoming AS src
@@ -289,7 +294,9 @@ VALUES (
     true,
     current_timestamp()
 );
-
+-- ------------------------------------------------------------------
+-- Step 3 — Insert new version for records that were just closed
+-- ------------------------------------------------------------------
 
 INSERT INTO gold.dim_patient (
     patient_id,
