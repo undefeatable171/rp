@@ -17,7 +17,7 @@ const qs = [
         📋 Copy
     </button>
 	 <span id="copyLine">
-       https://prathap-chowdary.github.io/int-prep/healthcare-notes.html 
+      https://prathap-chowdary.github.io/int-prep/azure/d.html 
     </span>`,
 		children:[],
 	},
