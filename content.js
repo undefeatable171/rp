@@ -4,21 +4,11 @@ const qs = [
 	{
 		cat:"Story & fit",
 		q:"Relted links",
-		answer:`<p> Health care domain: 
-             <button onclick="navigator.clipboard.writeText(document.getElementById('copyLine').innerText)">
-        📋 Copy
-    </button>
-    <span id="copyLine">
-       https://prathap-chowdary.github.io/int-prep/healthcare-notes.html 
-    </span> 
-</p>
-<p> Azure related: 
- <button onclick="navigator.clipboard.writeText(document.getElementById('copyLine2').innerText)">
-        📋 Copy
-    </button>
-	 <span id="copyLine2">
-      https://prathap-chowdary.github.io/int-prep/azure/d.html 
-    </span>`,
+		answer:`<p>  <a href="https://prathap-chowdary.github.io/int-prep/healthcare-notes.html" target="_blank">
+    Health care
+</a></p> <br>
+<p><a href="ttps://prathap-chowdary.github.io/int-prep/azure/d.html" target="_blank">
+    Azure related </a></p>`,
 		children:[],
 	},
 	//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
