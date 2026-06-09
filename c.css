@@ -1,4 +1,12 @@
 <style>
+.link {
+    color: inherit;          /* Use parent text color */
+    text-decoration: none;   /* Remove underline */
+}
+
+.link:visited {
+    color: inherit;          /* Prevent purple visited color */
+}
  pre { border-radius: 8px; font-size: 14px; line-height: 1.8; }
   *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
   :root {
