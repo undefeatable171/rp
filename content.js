@@ -408,23 +408,7 @@ children:[],
     answer:`"Day to day: Databricks for compute and notebook-based pipeline development, PySpark for distributed transformations, Delta Lake for the storage layer, ADLS Gen2 for raw and processed data storage, and Azure Data Factory for orchestration and triggering pipelines. Git for version control across the team. I use SQL heavily inside Databricks for the Gold-layer aggregations."`,children:[]
  
   },
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
 
-  {
-    cat:"Technical depth",
-    q:"What is Delta Lake and why does it matter?",
-    answer:`"Delta Lake is an open-source storage layer that brings ACID transactions to your data lake. Without it, a data lake is just files — no guarantees around consistency if a write fails halfway. With Delta Lake you get reliable MERGE and upsert operations, schema enforcement, schema evolution when your source data changes, and Time Travel which lets you query historical versions of a table. In practice it means I can build incremental pipelines that are safe to rerun without duplicating data, which is critical in healthcare where data accuracy matters."`,
- children:[]  
-  
-  },
-////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
-  {
-    cat:"Technical depth",
-    q:"How did you optimize Spark job performance?",
-    answer:`"A few different levers. First, partitioning — partitioning data by a high-cardinality date or region column reduces the shuffle and limits how much each task reads. Second, caching — any DataFrame that gets reused in the same pipeline I persist to memory rather than recomputing it. Third, file compaction — small files are a major Spark performance killer, so I run OPTIMIZE on Delta tables regularly to consolidate them. Z-ORDER on top of that clusters physically related data to cut read I/O. Combined, these brought our job runtimes down 40 to 45 percent."`,
- children:[]  
-  },
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
 
   {
