@@ -119,6 +119,19 @@ children:[],
 ],},
 ]
 },
+//////////////////////////////////
+{
+  cat:`Data sources`,
+  q:`What data sources have you worked with?`,
+  answer:`💠In my current healthcare project at TCS, I've primarily worked with relational databases and file-based sources. Our main source is a PostgreSQL database that stores operational healthcare data, and we also receive CSV and Excel files from external partners. These files are landed into ADLS Gen2 before processing.
+
+<br> 💠 My responsibility was to build ingestion pipelines that could handle both database and file-based inputs efficiently. For database tables, we use incremental extraction based on a watermark maintained in a metadata table, while for files we perform schema validation before loading them into the Bronze layer.
+
+<br> 💠 This approach helps us process around 45–50 GB of data daily while minimizing redundant data movement, and it integrates seamlessly with our Medallion architecture.`,
+tip:`in general 2 Categories:<br> File-based Sources: Parquet , csv , excel.<br> Structured relational sources — databases like PostgreSQL, SQL Server, Oracle `,  
+children:[],
+
+},
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
 
   {
@@ -213,6 +226,7 @@ for i in range(retries):
             raise e</code></pre>`,
 			children:[],
 			},
+            
 		],
 },
 ///new
@@ -243,9 +257,24 @@ a:`<li>Currently, we rely on source data contracts, so we don’t have a dedicat
 {q:`how look back windows are decided`,
 	a:`<li>Lookback window is decided based on data arrival patterns and business SLAs.</li><li>We analyze how late data typically arrives (e.g., 1–2 days delay), and set the window 	slightly higher (like 2–3 days) to be safe.</li>`
 ,children:[],
-},],},],},
+},],},
 //////////////////////////////////
-
+{
+                q:`Why run every 4 hours if CSV/Excel is daily?`,
+                a:`"PostgreSQL is the real-time driver. Encounters, claims, and diagnoses update continuously — patients getting admitted, claims being submitted throughout the day. Finance needs claim visibility mid-day, not next morning. The 4-hour cadence is driven by PostgreSQL freshness. CSV and Excel are daily — the pipeline just checks each run, processes if new files are present, skips if not."`,
+                children:[],
+            },
+{
+    q:`if you know no files in csv/excel filders. why every run?`,
+    a:`The 4-hour cadence is justified by PostgreSQL alone — that data changes continuously. For CSV and Excel, the pipeline does a lightweight file existence check on ADLS — if nothing is there, it skips in seconds. Running one unified pipeline every 4 hours is simpler to maintain and monitor than managing two separate schedules. Operational simplicity over over-engineering."`,
+    children:[],
+},
+{
+q:`Isn't Gold stale without the daily CSV?`,
+a:`"That's acceptable by design. Payers batch-process adjudication overnight — there's no real-time adjudication feed available from them. So the morning CSV drop is the earliest that data exists anywhere. It's not a pipeline limitation — it matches upstream reality. PostgreSQL data is fresh every 4 hours. Adjudication results, lab results, denial worklists — those are next-morning by nature."`,
+children:[],
+},
+],},
 
 //new
 {q:`Silver Layer`,
