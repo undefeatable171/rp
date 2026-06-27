@@ -21,12 +21,11 @@ const qs = [
 {
     cat:"Story & fit",
     q:"Tell me about yourself.",
-     answer:`Sure ! Thanks for giving this opportunity. I’m Prathap, working as an Azure Data Engineer at TCS with around 3 years of experience in building and optimizing enterprise data pipelines. My core stack includes Azure Databricks, ADF, PySpark, Python, and SQL. I’ve been working on a US-based healthcare client project. I completed my B.Tech in Electronics and Communication Engineering from VR Siddhartha Engineering College, Vijayawada.
-    I also hold both the Databricks Certified Data Engineer Associate and Professional certifications`,
+     answer:`Hi, I'm Prathap. I'm currently working as an Azure Data Engineer at TCS with around 3 years of experience. I primarily work on a US healthcare project, building scalable batch ETL pipelines using Azure Databricks, PySpark, Python, and SQL. I hold both the Databricks Certified Data Engineer Associate and Professional certifications, and coming to academics,  I have completed my graduaction in Electronics and Communication Engineering from VR Siddhartha Engineering College, Vijayawada.`,
               children:[
               {
                 q:"Why ECE to Data Engineering?",
-                a:"Although I studied ECE, I developed a strong interest in data and software during my college and started learning Python and SQL. That interest turned into hands-on experience in my current role with Databricks and PySpark, so I chose to build my career in data engineering",
+                a:"Although I studied ECE, I developed a strong interest in software during my college and started learning Python and SQL. That interest turned into hands-on experience in my current role with Databricks and PySpark, so I chose to build my career in data engineering",
                 children:[]
               },
             ]
@@ -38,9 +37,8 @@ const qs = [
  {
     cat:"Story & fit",
     q:"Why are you looking for a new role right now? / leaving TCS",
-    answer:`"👉TCS gave me a strong foundation in building production-grade data pipelines on Azure Databricks and understanding how large-scale healthcare data systems operate end to end.
-    👉 My role has mainly focused on enhancing & optimizing existing systems, and I’m now looking for opportunities where I can contribute more to design decisions and grow in building scalable data systems`
-    ,
+answer:`TCS has given me a strong foundation in building production-grade data pipelines on Azure Databricks and working with large-scale healthcare data.<br> I'm now looking for an opportunity where I can take on broader responsibilities, work on more complex data engineering problems, and contribute to the design and development of scalable data platforms. `
+ ,
 children:[
     {
         q:"what optimizations",
@@ -96,11 +94,12 @@ children:[
 
 { cat:"Project",
 q:`have you ever worked on any end-end data Frame work ?`,
-answer:`"Yes, I've worked on an end-to-end data pipeline built on Azure Databricks. We follow Medallion architecture — starting from raw ingestion in Bronze, transformation and deduplication in Silver, and business-ready aggregations and SCD Type 2 dimensions in Gold. The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB of healthcare data daily. From source to BI consumption — that's our end-to-end framework." `,
+answer:`"Yes, I've worked on an end-to-end data pipeline built on Azure Databricks. We follow Medallion architecture — starting from raw ingestion in Bronze, transformation and deduplication in Silver, and business-ready aggregations in Gold. The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB of healthcare data daily. From source to BI consumption — that's our end-to-end framework." `,
 tip:`end-end data pipe line = end-end data framework `,
 children:[{
 q: `"Can you tell me more about the domains of the projects that you have worked with?"`,
-a:`I have primarily worked in the Healthcare domain for a US-based client. The project deals with healthcare claims data. We receive data from multiple upstream systems containing member information, provider details, claim transactions, diagnosis codes, and payment information.
+a:`I have primarily worked in the Healthcare domain for a US-based client. The project deals with clinical and financial data.
+. We receive data from multiple Source systems systems containing member information, provider details, claim transactions, diagnosis codes, and payment information.
 
 My role is to build and maintain Databricks-based ETL pipelines that ingest data from PostgreSQL and file-based sources, transform it, and make it available for downstream reporting, analytics, and data science teams.<br>
 https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use this for healthcare notes`,
