@@ -1,4 +1,4 @@
-const cats = ["All","Story & fit","Technical depth","Salary & logistics","Mindset & growth","Project"];
+const cats = ["Architecture","All","Story & fit","Technical depth","Salary & logistics","Mindset & growth","Project"];
 const qs = [
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
 	{
@@ -391,8 +391,107 @@ INNER JOIN gold.dim_patient tgt
   },
 
 ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
+ {
+    cat:"Architecture",
+    q:"Arcitecture - Orchestration",
+    answer:``,
+    children:[
+        {
+            q:`why 4 hours cadence?`,
+            a:`The cadence was decided based on business requirements and source data availability. <br> 💠 Since new operational data was generated throughout the day, a daily refresh would introduce unnecessary delay. <br> 💠 A 4-hour schedule provided multiple intraday updates while keeping compute costs and pipeline overhead reasonable.`,
+            children:[
+                {
+                    q:`who decided 4 hours?`,
+                    a:`The cadence was agreed between the business stakeholders and the data platform team based on reporting SLAs and source data availability. My responsibility was implementing and maintaining the pipelines to meet that SLA.`,
+                    children:[],
+                },
+                {
+                    q:`what business requirement drove 4 hours?`,
+                    a:`The business requirement was that downstream reporting should be refreshed multiple times during the day instead of waiting for the next day's batch. Since new claims and encounter records were continuously generated, the reporting teams wanted relatively fresh data for operational reporting.`,
+                    children:[],
+                },
+            ],
+        },
+        {
+            q:`What if business later needs CSV data fresher than daily — how would you handle that?`,
+            a:`We'd revisit the vendor relationship first — if they can send intraday files, we'd adjust the schedule to match. The pipeline's schedule is driven by actual source capability and business requirement, not hardcoded to a fixed assumption.`,
+            children:[],
+        },
+        {
+            q:`<span style='color:green'>Why does PostgreSQL refresh every 4 hours but CSV only daily — isn't that inconsistent?<br>
+            So for those 5 out of 6 cycles, isn't your CSV-backed data stale?<br>
+            Won't Gold contain stale CSV data?</span>`,
+            a:` Technically Yes, but that's by design.Each source refreshes based on its own business need and its own delivery pattern. <br> 💠 The payer/clearinghouse doesn't have a real-time  feed; the earliest that data available is the next morning when their batch file drops. <br>💠 Our pipeline just reflects that reality — PostgreSQL refreshes every 4 hours because it can, CSV refreshes daily because that's the earliest the data exists at all. <br> 💠 Gold always uses the latest available data from each source.`, 
+            children:[],
+        },
+    ],
+ },
+      
+/////////////////////////////////
+{
+    cat:"Architecture",
+    q:"Arcitecture -Source",
+    answer:``,
+    children:[
+       
+        {
+            q:`what if CSV file is delayed?`,
+            a:`Our PostgreSQL pipeline runs every 4 hours, but CSV files are vendor-delivered once a day, so we schedule their ingestion separately at a fixed cutoff time.<br> At the scheduled time, the pipeline checks whether the expected file is available. If it is, we process it. If it's missing, we record the status as SKIPPED_FILE_NOT_FOUND in our control table, generate an alert, and continue processing the remaining sources.<br> We don't wait for delayed files beyond cutoff time, because that would make downstream Silver and Gold processing unpredictable. Once the vendor delivers the file, it's picked up automatically in the next scheduled daily run.`,
+            children:[
+                {
+                    q:`how do you decide the cutoff time?`,
+                    a:`It's based on historical delivery patterns of the vendor — most of our files arrive via overnight batch from payers and clearinghouses, so by early morning they're reliably present.<br> 💠 We picked a cutoff with enough buffer for normal variance. If a vendor consistently misses that window, that's a conversation with them to either adjust our schedule or fix their delivery timing`,
+                    children:[],
 
+                },
+                {
+                    q:`what if the CSV file is delayed beyond cutoff?`,
+                    a:``,
+                    children:[],
+                },
 
+            ],
+        },
+        {
+            q:`Why Parquet in Bronze?`,
+            a:`Bronze is intended to preserve raw source data. Since we don't perform updates or MERGE operations there, Parquet keeps storage simple and lightweight. Delta features such as ACID transactions and MERGE become valuable from the Silver layer onwards.
+            <br> <code>But we use Delta in our project ? </code><br>
+            💠 That's a valid approach. Many organizations use Delta across all Medallion layers. In our project, the design decision was to keep Bronze lightweight and introduce Delta where transactional features became necessary.`,
+            children:[],
+        },
+    ],
+},
+//////////////////////////////////////////////////////////////
+{
+    cat:" Architecture",
+    q:"Arcitecture - Silver",
+    answer:``,
+    children:[],
+},
+//////////////////////////////////////////////////////////
+{
+    cat:" Architecture",
+    q:"Arcitecture - Gold",
+    answer:``,
+    children:[
+        {
+            q:`did you work with stakeholders on KPI definitions? `,
+            a:`<ul><li>I wasn't directly involved in defining the KPIs with business stakeholders. Those business rules  were typically finalized by the product owner, business analysts, and reporting teams</li><li>I attended requirement clarification and sprint discussions where business requirements and schema changes were discussed </li> <li> My responsibility was understanding those requirements, implementing the data transformations, and ensuring the Gold tables accurately supported those reporting needs.</li></ul>`,
+            children:[
+                {
+                    q:`How did you know what to implement?`,
+                    a:`<li>We received functional requirements and mapping documents from the business analysts, which defined the required fields, business rules, and expected outputs.</li><li> We discussed any ambiguities during requirement clarification or sprint meetings.</li><li> We also referred to existing reports and sample outputs to validate that our transformations matched downstream reporting expectations.`,
+                    children:[],
+                }
+            ],
+        }
+
+    ],
+}
+
+,
+
+////////////////////////////////////////////////////////////////
 {
     cat:" Scenario Based",
    q:`Your 40-45% optimizaton story / Biggest technical achievement so far`,
