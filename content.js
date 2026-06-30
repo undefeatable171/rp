@@ -106,18 +106,23 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
 children:[
 {
 			q:`"You said healthcare claims. What are the top 5 datasets you process?"`,
-			a:`The major datasets include member information, provider information, claim transaction data, payment-related data, and some reference/master datasets used for validations and mappings.`,
+			a:`The major datasets include member information, provider information, claim transaction data, visits , diagnosos and procedures etc,.`,
 			children: [],
 			},
 {
-q:`"How did your project handle HIPAA compliance?"`,
-a:`Since we were handling healthcare claims data containing PHI, compliance was built into every layer of the pipeline. In Databricks, we used Unity Catalog to enforce role-based access — sensitive fields like member name, date of birth, and SSN had column-level masking applied, so only authorized roles could see unmasked values. Row-level security on Gold tables ensured downstream teams only accessed data within their scope. We never logged PHI in pipeline logs — any debugging used surrogate keys like member_id instead of actual patient identifiers. Audit logs were enabled in Unity Catalog to track who accessed what and when. For reporting and analytics, we served de-identified or masked datasets wherever PHI wasn't needed.`,
-children:[],
-},
+q:`How HIpaa is followed`,
+  a:`HIPAA compliance in our project is handled at multiple levels.
+  <ul>
+  <li>In our project, sensitive fields like SSN and home address are handled at the source level itself — data comes from the client's PostgreSQL system already tokenized  before landing in our pipeline.</li>
+  <li>Business identifiers like MemberID, ClaimID, ProviderID, NDC codes are accessible as they're needed for ETL and joins — these are not considered hard PII under HIPAA.  Raw PII visibility is restricted to the client's compliance team — we don't interact with it at any layer of our Medallion pipeline.</li>
+  <li>At the pipeline level, no PII fields are logged or printed in notebook outputs or job logs.</li>
+  <li>Access is controlled through Azure AD groups synced into Databricks via SCIM — we follow the least privilege principle, each group gets exactly what their job needs.</li>
+  <ul>`,
+  children:[],
 
-],},
-]
 },
+],
+},],},
 //////////////////////////////////
 {
   cat:`Data sources`,
