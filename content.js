@@ -142,33 +142,51 @@ children:[],
     cat:"Project",
     q:"Walk me through your current project.",
    answer: `
-<ul>
-  <li>I'm currently in the US healthcare domain where I build and optimize data pipelines on Azure Databricks.</li>
-  <li>We follow Medallion architecture — Bronze, Silver, and Gold — to ensure clean separation between raw ingestion, transformation, and business-ready data.</li>
-  <li>Our primary sources include an on-prem PostgreSQL database and file-based inputs like CSV and Excel.</li>
-  <li>In the Bronze layer, we follow an incremental load pattern — we maintain a metadata table that tracks the last_processed_timestamp per table. On each run, we query only the delta records beyond that watermark. All raw data lands in Bronze in Parquet format on ADLS Gen2 — minimal transformations here, just schema alignment across sources.</li>
-  <li>In the Silver layer, we pick up today's incremental records from Bronze, apply transformations, truncate Silver, and reload it — making every run idempotent.
-    <ul>
-      <li>Deduplication using ROW_NUMBER() partitioned by business key, ordered by updated_at descending.</li>
-      <li>Null handling — drop on critical columns, default-fill on non-critical.</li>
-      <li>Normalization — standardizing data types, date formats, and column casing across sources.</li>
-      <li>Silver is stored in Delta format for consistency and downstream support.</li>
-    </ul>
-  </li>
-  <li>In the Gold layer, business logic lives here.
-    <ul>
-      <li>Dimension tables use SCD Type 2 via MERGE — closing old records with end date and active flag, inserting new versions.</li>
-      <li>Fact tables are upserted first via MERGE, then aggregations are run on top for summary tables.</li>
-      <li>All Gold tables are stored in Delta format.</li>
-    </ul>
-  </li>
-  <li>BI and reporting teams consume Gold through views built on top of Delta tables — clean, always-current interface without touching raw tables.</li>
-  <li>Data science teams work directly on Delta tables for time travel — querying historical versions for model training.</li>
-  <li>The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB daily end to end.</li>
-</ul>
+<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.5; font-size:13px;">
+
+    <span style="color: #0078D4;">Domain & Objective:</span> 
+    <p>I'm currently working on a US healthcare project for a hospital network operating multiple hospitals and  clinics. The objective of our platform is to consolidate data from multiple operational systems into a centralized data platform for downstream reporting, analytics. We built this platform on Azure Databricks using Medallion architecture, for clean separation between raw ingestion, transformation, and business-ready data.
+  </p>
+<span style="color: #0078D4;">Data Sources:</span> 
+  <p>
+Our primary sources are an on-premises PostgreSQL database containing operational healthcare data, along with CSV and Excel files such as eligibility extracts, claims adjudication, prior authorization, and reference datasets like ICD, CPT, fee schedules, and provider roster.<br> Overall, we  processes around 45–50 GB of data per day and the core operational pipelines run every four hours using Databricks Workflows.  </p>
+<span style="color: #0078D4;">Layers:</span>
+  <p>
+  
+At a high level, Bronze is our raw ingestion layer, Silver is where we clean, standardize, and maintain the latest operational data, and Gold is our business consumption layer where we build dimension and fact tables for downstream analytics.  </p>
+    <span style="color: #0078D4;">Outro:</span><br>
+  <p>
+We use Unity Catalog for centralized governance, and since the data contains PHI, access is controlled through fine-grained security. Downstream finance, BI, and data science teams consume the curated datasets we deliver. Ourresponsibility is building and maintaining the data platform, while the BI team owns the reporting  </p>
+
+</div>
 `,
+tip:`Just say this , if asked then continue each layer details.`,
 children:[
+    {
+        q:`detailed project flow`,
+        a:`
+        <span style="color: #0078D4;">Sources:</span><br>
+        <p> We have two primary source types. <ol><li>The first is an on-premises PostgreSQL database containing six core operational tables: Patients, Providers, Encounters, Claims, Diagnoses, and Procedures.</li><li>
+
+The second consists of file-based sources such as daily CSV files for Eligibility, Claims Adjudication, and Prior Authorization responses, along with periodic reference files like ICD-10, CPT, Fee Schedule, and Provider Roster.</li></ol></p>
+        <span style="color: #0078D4;">Bronze:</span><br>
+        <p> The Bronze layer is responsible for raw data ingestion. PostgreSQL data is ingested incrementally, while file-based sources are processed on their respective schedules.
+The Bronze layer preserves raw source data in Parquet format, applying only minimal transformations like schema alignment and audit metadata.</p>
+        <span style="color: #0078D4;">Silver:</span><br>
+        <p>The Silver layer standardizes and cleans the data by applying data quality validations like null handling, datatype standardization, and deduplication. The cleaned data is then MERGED into cumulative Delta tables, while reference datasets are refreshed using full reload whenever new versions are received.</p>
+        <span style="color: #0078D4;">Gold:</span><br>
+        <p>The Gold layer is our business consumption layer, where we build business-ready dimension and fact tables. Dimension tables use SCD Type 2 wherever historical tracking is required, while fact tables are enriched with dimensions and reference data for downstream analytics.</p>
+        <span style="color: #0078D4;">Downstream Consumption:</span><br>
+        <p>The curated Gold tables are consumed by finance, operations, BI, and data science teams. Our responsibility is building and maintaining the data platform, while the BI team owns the reporting and KPI definitions</p>
+        <span style="color: #0078D4;">Orchestration & Monitoring:</span><br>
+        <p>he platform is orchestrated using Databricks Workflows, and we use Unity Catalog for centralized governance with fine-grained access control to protect PHI.</p>
+          <span style="color: #0078D4;">Responsibility:</span><br>
+          <p>My responsibilities include developing PySpark transformations, implementing incremental ETL pipelines, optimizing Spark jobs, resolving production issues.</p>
+        `,
+        children:[],
+    },
 {
+
 	q:`High Level`,
 	a:``,
 	children:[
