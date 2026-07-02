@@ -154,7 +154,6 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
 Our primary sources are an on-premises PostgreSQL database containing operational healthcare data, along with CSV and Excel files such as eligibility extracts, claims adjudication, prior authorization, and reference datasets like ICD, CPT, fee schedules, and provider roster.<br> Overall, we  processes around 45–50 GB of data per day and the core operational pipelines run every four hours using Databricks Workflows.  </p>
 <span style="color: #0078D4;">Layers:</span>
   <p>
-  
 At a high level, Bronze is our raw ingestion layer, Silver is where we clean, standardize, and maintain the latest operational data, and Gold is our business consumption layer where we build dimension and fact tables for downstream analytics.  </p>
     <span style="color: #0078D4;">Outro:</span><br>
   <p>
@@ -173,11 +172,13 @@ We use Unity Catalog for centralized governance, and since the data contains PHI
 The second consists of file-based sources such as daily CSV files for Eligibility, Claims Adjudication, and Prior Authorization responses, along with periodic reference files like ICD-10, CPT, Fee Schedule, and Provider Roster.</li></ol></p>
         <span style="color: #0078D4;">Bronze:</span><br>
         <p> The Bronze layer is responsible for raw data ingestion. PostgreSQL data is ingested incrementally, while file-based sources are processed on their respective schedules.
-The Bronze layer preserves raw source data in Parquet format, applying only minimal transformations like schema alignment and audit metadata.</p>
+The Bronze layer preserves raw source data in Parquet format, applying only minimal transformations like schema alignment and audit metadata.<ps>Stored as partition by ingetion_date, append only</p>
         <span style="color: #0078D4;">Silver:</span><br>
         <p>The Silver layer standardizes and cleans the data by applying data quality validations like null handling, datatype standardization, and deduplication. The cleaned data is then MERGED into cumulative Delta tables, while reference datasets are refreshed using full reload whenever new versions are received.</p>
         <span style="color: #0078D4;">Gold:</span><br>
-        <p>The Gold layer is our business consumption layer, where we build business-ready dimension and fact tables. Dimension tables use SCD Type 2 wherever historical tracking is required, while fact tables are enriched with dimensions and reference data for downstream analytics.</p>
+
+        <p>The Gold layer is our business consumption layer, where dimensions preserve history using SCD Type 2 while fact tables are enriched with dimensions and reference data for downstream analytics."
+</p>
         <span style="color: #0078D4;">Downstream Consumption:</span><br>
         <p>The curated Gold tables are consumed by finance, operations, BI, and data science teams. Our responsibility is building and maintaining the data platform, while the BI team owns the reporting and KPI definitions</p>
         <span style="color: #0078D4;">Orchestration & Monitoring:</span><br>
@@ -194,24 +195,26 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                 children: [
                     {
                         q: `Why medallion `,
-                        a: ` <ul>
-  		<li>In our project, Medallion architecture helped solve data inconsistency and reprocessing issues from multiple sources (PostgreSQL + files).
-    		<ul>
-      			<li>Bronze stores raw data as-is from source→ so you always have a replayable source of truth if anything breaks downstream.</li>
-      			<li>Silver ensures standardized, deduplicated datasets, avoiding repeated cleaning logic across teams</li>
-      			<li>Gold provides business-ready, aggregated datasets, so BI and DS teams don’t implement their own transformations</li>
-    		</ul>
-  		</li><li>Without medallion, debugging and root-cause tracing were difficult, and reprocessing required repeatedly hitting source systems, increasing cost and risk.</li></ul>`,
+                        a: ` <ul> <li>Our data came from multiple sources—an on-prem PostgreSQL database, daily CSV extracts, and monthly/annual reference files , each has different formats, refresh frequencies.</li>
+                        <li> so Medallion gave us clear separation of responsibilities. Bronze preserved raw data, Silver produced a clean and standardized data, and Gold delivered business-ready datasets </li>
+                        <li> It also simplified recovery and debugging, because if a downstream layer failed, we could reprocess from the previous layer instead of repeatedly extracting data from the source systems.</li></ul>`,
                         children: [],
                     },
                     {
                         q: `what is medallion`,
                         a: ` <li>Medallion architecture is a layered data design pattern with three zones — Bronze, Silver, and Gold.</li>
-					<li>Bronze is the raw landing layer where data is ingested as-is from source systems with minimal transformation. Silver is the cleansed and standardized layer where deduplication, null handling, and normalization happen. Gold is the business-ready layer where aggregations, dimensional models, and domain-specific logic live — this is what BI teams and data science teams consume directly. </li>
+					<li>Bronze is the raw landing layer where data is ingested as-is from source systems with minimal transformation. Silver produced a clean and standardized data, and Gold delivered business-ready datasets </li>
 <li>The core idea is progressive data quality — each layer adds more structure and trust to the data </li>`,
                         children: [],
                     },
-
+                    {
+                        q: `<span style="color:#1F618D;font-weight:bold;">Are you connecting to oon-prem postgres using self hosted Ienegration Runtime(SHIR)</span><br>
+`,
+                        a: `<p>
+No. SHIR is typically used with Azure Data Factory for on-prem connectivity, whereas our ingestion was implemented directly in Databricks using JDBC over the client's secure network.
+</p>`,
+                        children: [],
+                    },
 
                     {
                         q: `Why Databricks for just 45–50 GB/day, not rdbms or Snowflake ingestion`,
@@ -253,56 +256,6 @@ for i in range(retries):
                         children: [],
                     },
 
-                ],
-            },
-            ///new
-
-            {
-                q: `Bronze Layer`,
-                a: ``,
-                children: [
-                    {
-                        q: `How do you ensure atomicity between data load + watermark update? and how it loads`,
-                        a: `<li>Metadata table (stored as Delta) tracks last_processed_timestamp.</li><li>We update it only after successful data write to Bronze.</li><li>This ensures if pipeline fails mid-way, watermark is not updated → so data is reprocessed safely.</li>`, children: [],
-                    },
-                    {
-                        q: `Why Parquet in Bronze, not Delta?`,
-                        a: `<li>Bronze is meant to store raw, immutable data, so we use Parquet to keep it simple and cost-efficient.
-</li><li>We avoid Delta here since we don’t need updates or ACID — just raw ingestion.
-</li><li>Delta is used from Silver onwards where we need MERGE, updates, and consistency.</li>`, children: [],
-                    },
-
-
-                    //////////////////////////
-
-                    {
-                        q: `Late arriving data`,
-                        a: `<li>Currently, we rely on source data contracts, so we don’t have a dedicated late-data handling mechanism.</li>
-	<li>I’m aware this is a limitation, since timestamp-based incremental loads can miss late-arriving records.</li>
-	<li>A better approach would be implementing a lookback window or CDC-based ingestion to handle such scenarios more reliably.</li>`
-                        , children: [
-                            {
-                                q: `how look back windows are decided`,
-                                a: `<li>Lookback window is decided based on data arrival patterns and business SLAs.</li><li>We analyze how late data typically arrives (e.g., 1–2 days delay), and set the window 	slightly higher (like 2–3 days) to be safe.</li>`
-                                , children: [],
-                            },],
-                    },
-                    //////////////////////////////////
-                    {
-                        q: `Why run every 4 hours if CSV/Excel is daily?`,
-                        a: `"PostgreSQL is the real-time driver. Encounters, claims, and diagnoses update continuously — patients getting admitted, claims being submitted throughout the day. Finance needs claim visibility mid-day, not next morning. The 4-hour cadence is driven by PostgreSQL freshness. CSV and Excel are daily — the pipeline just checks each run, processes if new files are present, skips if not."`,
-                        children: [],
-                    },
-                    {
-                        q: `if you know no files in csv/excel filders. why every run?`,
-                        a: `The 4-hour cadence is justified by PostgreSQL alone — that data changes continuously. For CSV and Excel, the pipeline does a lightweight file existence check on ADLS — if nothing is there, it skips in seconds. Running one unified pipeline every 4 hours is simpler to maintain and monitor than managing two separate schedules. Operational simplicity over over-engineering."`,
-                        children: [],
-                    },
-                    {
-                        q: `Isn't Gold stale without the daily CSV?`,
-                        a: `"That's acceptable by design. Payers batch-process adjudication overnight — there's no real-time adjudication feed available from them. So the morning CSV drop is the earliest that data exists anywhere. It's not a pipeline limitation — it matches upstream reality. PostgreSQL data is fresh every 4 hours. Adjudication results, lab results, denial worklists — those are next-morning by nature."`,
-                        children: [],
-                    },
                 ],
             },
 
@@ -448,14 +401,33 @@ INNER JOIN gold.dim_patient tgt
                 children: [],
             },
             {
+                q: `if you know no files in csv/excel filders. why every run?`,
+                a: `The 4-hour cadence is justified by PostgreSQL alone — that data changes continuously. For CSV and Excel, the pipeline does a lightweight file existence check on ADLS — if nothing is there, it skips in seconds. Running one unified pipeline every 4 hours is simpler to maintain and monitor than managing two separate schedules. Operational simplicity over over-engineering."`,
+                children: [],
+            },
+            {
                 q: `<span style='color:green'>Why does PostgreSQL refresh every 4 hours but CSV only daily — isn't that inconsistent?<br>
             So for those 5 out of 6 cycles, isn't your CSV-backed data stale?<br>
             Won't Gold contain stale CSV data?</span>`,
                 a: ` Technically Yes, but that's by design.Each source refreshes based on its own business need and its own delivery pattern. <br> 💠 The payer/clearinghouse doesn't have a real-time  feed; the earliest that data available is the next morning when their batch file drops. <br>💠 Our pipeline just reflects that reality — PostgreSQL refreshes every 4 hours because it can, CSV refreshes daily because that's the earliest the data exists at all. <br> 💠 Gold always uses the latest available data from each source.`,
                 children: [],
             },
+            {
+                q: `Late arriving data`,
+                a: `<li>We handle late-arriving records using the updated_at watermark rather than the business date.</li>
+	<li>Even if a claim relates to an earlier service date, it's picked up automatically in the next incremental run when it's inserted or updated in PostgreSQL</li>
+	<li>Our incremental design is based on the agreed data contract that the source application updates updated_at for every insert and update.</li>
+    <li>Downstream, Silver uses MERGE, so if a record is reprocessed due to a retry or subsequent update, it's updated rather than duplicated.</li>`
+                , children: [
+                    {
+                        q: `why not look back windows`,
+                        a: `<li>Since the source application maintained the updated_at column as part of the agreed data contract, a straightforward watermark-based incremental load was sufficient. Sliding windows are typically introduced when the source timestamps aren't fully reliable or there are replication delays.</li>`
+                        , children: [],
+                    },],
+            },
         ],
     },
+    ///////////PostgreSQL
     {
         cat: `Bronze`,
         q: `PostgreSQL`,
@@ -622,9 +594,8 @@ We didn't configure it explicitly; the database's default isolation level(READ C
 
 
   <p>
-    <span style="color:#1F618D; font-weight:bold;"> 5. What if the pipeline fails halfway?</span><br>
-    Successfully completed tables remain unchanged, while only the failed table is retried in the next run because its watermark wasn't advanced.
-  </p>
+    <span style="color:#1F618D; font-weight:bold;"> 5. What if the watermark updae fails but bronze parquet is written?</span><br>
+Watermark wasn't advanced so next run re-reads the same window — same records land in Bronze again as a new partition. Silver MERGE on business key finds no tracked column changes, so no update, no duplicates. Idempotency holds without any manual intervention  </p>
 
 
   <p>
@@ -685,13 +656,12 @@ We didn't configure it explicitly; the database's default isolation level(READ C
   </p>
 
 </div>
-
-</div>`,
+`,
                 children: [],
             },
             {
-                        q: `Watermark metadata Table`,
-                        a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
+                q: `Watermark metadata Table`,
+                a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
 
   <p>
     <span style="color:#1F618D; font-weight:bold;">1.  What is the purpose of the metadata table?</span><br>
@@ -715,10 +685,6 @@ We didn't configure it explicitly; the database's default isolation level(READ C
     Each source table has its own metadata record and watermark, allowing every table to progress independently.
   </p>
   <p>
-    <span style="color:#1F618D; font-weight:bold;">6. What if the metadata update fails? Do you roll back Bronze?</span><br>
-    No. Bronze data is already written successfully. Since the watermark isn't updated, the same incremental window is reprocessed in the next run, making rollback unnecessary.
-  </p>
-  <p>
     <span style="color:#1F618D; font-weight:bold;">7. What if two tasks try to update metadata table?</span><br>
 Multiple tasks can update the metadata table simultaneously because each task updates the watermark for a different source table. Concurrent updates to the same watermark record is not possible as 1 pipeline has 1 task for a particular table.  </p>
  <p>
@@ -726,28 +692,168 @@ Multiple tasks can update the metadata table simultaneously because each task up
     We prevent concurrent executions using Databricks Workflow concurrency settings, ensuring only one active run per pipeline at a time.
   </p>
 </div>`,
-                        children: [],
-                    },g
-            
+                children: [],
+            },
+            {
+                q: `idempotency`,
+                a: `
+                <div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
+
+  <p>
+    <span style="color:#1F618D; font-weight:bold;">❓. How do you handle deleted records?</span><br>
+    Our source doesn't expose deletes, so we only process inserts and updates. Physical deletes are handled upstream as per the agreed data contract.
+  </p>
+  <p>
+    <span style="color:#1F618D; font-weight:bold;">2. What if a source record is updated while you're reading it?</span><br>
+The extraction reads a point-in-time snapshot of the source data(12:00:00 000). If a record is updated after that snapshot is taken(12;00:00 001), it may not be included in the current run. However, since we advance the watermark to the maximum updated_at from the successfully processed data—not the current time—it is automatically picked up in the next incremental run, ensuring no data loss.  </p>
+
+  <p>
+    <span style="color:#1F618D; font-weight:bold;">3. What if the same incremental window is processed twice?</span><br>
+Safe by design — Silver MERGE on business key means reprocessing the same window just skips the updates/ since no tracked cols are changed. No duplicates created, no data loss. That's the idempotency guarantee.  </p>
+
+  <p>
+    <span style="color:#1F618D; font-weight:bold;">4. How do you ensure idempotency?</span><br>
+    We update the watermark only after a successful Bronze write, and Silver/Gold use MERGE, so rerunning the same data produces the same final state.
+  </p>
+
+  <p>
+    <span style="color:#1F618D; font-weight:bold;">5. What if the source clock differs from Databricks?</span><br>
+    We rely on the source database's <b>updated_at</b> timestamps rather than the Databricks cluster time, avoiding clock synchronization issues.<br><code>last_updated=df.select(max(df["updated_at"])).collect()[0][0]</code>
+  </p>
+
+
+</div>`,
+                children: [],
+            },
+            {
+                q: `edge cases`,
+                a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ What if two records have the same updated_at?</span><br>
+We rely on the source maintaining unique update timestamps. If needed, a composite watermark using <b>(updated_at, primary key)</b> can eliminate ambiguity.
+</p>
+<p>
+<span style="color:#1F618D;font-weight:bold;">2. bronze table has both update_at and ingetion_timestamp,ingetion_date?</span><br>
+Yes.updated_at comes from the source and drives our watermark logic. ingest_timestamp is added by the pipeline at write time and is purely for audit and traceability — they're independent columns serving different purposes."
+</p>
+<p>
+<span style="color:#1F618D;font-weight:bold;">3. What about timestamp precision?</span><br>
+PostgreSQL updated_at is typically microsecond precision and compare values consistently without truncation.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">4. What if extraction takes a long time?</span><br>
+Since we process only incremental data every four hours, extraction comfortably completes within our SLA.
+</p>
+
+</div>`,
+                children: [],
+            },
+            {
+                q: `Monitorng`,
+                a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
+
+<h3 style="color:#2E86C1;">Monitoring</h3>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ How do you capture row counts?</span><br>
+We capture the processed row count after successful ingestion and store it in the control table for monitoring.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ How do you perform reconciliation?</span><br>
+We compare source and target row counts for each run to identify any unexpected discrepancies.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ Why do you need a control table?</span><br>
+It tracks pipeline execution status, dependencies, row counts, timestamps, and prevents duplicate file processing.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ How are failures monitored?</span><br>
+Failed tasks generate alerts, and the execution status is recorded in the control table for operational monitoring.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ What was your SLA?</span><br>
+The pipeline was designed to refresh transactional data every four hours and consistently completed within that SLA.
+</p>
+
+</div>`,
+                children: [],
+            },
+            {
+                q: `security`,
+                a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">1. Why use Databricks Secrets?</span><br>
+They eliminate hardcoded credentials and provide centralized, secure secret management.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">2. Was data encrypted?</span><br>
+Yes. Data was encrypted both in transit and at rest using Azure-managed encryption.
+</p>
+
+</div>`,
+                children: [],
+            },
+
+
 
 
         ],
     },
+    /////////////parquet
     {
         cat: `Bronze`,
         q: `Parquet`,
         answer: ``,
         children: [
             {
-                q: `Why Parquet in Bronze?`,
-                a: `Bronze is intended to preserve raw source data. Since we don't perform updates or MERGE operations there, Parquet keeps storage simple and lightweight. Delta features such as ACID transactions and MERGE become valuable from the Silver layer onwards.
+                q: `click here`,
+                a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">1. Why Parquet?</span><br>
+Bronze is intended to preserve raw source data. Since we don't perform updates or MERGE operations there, Parquet keeps storage simple and lightweight. Delta features such as ACID transactions and MERGE become valuable from the Silver layer onwards.
             <br> <code>But we use Delta in our project ? </code><br>
-            💠 That's a valid approach. Many organizations use Delta across all Medallion layers. In our project, the design decision was to keep Bronze lightweight and introduce Delta where transactional features became necessary.`,
+            💠 That's a valid approach. Many organizations use Delta across all Medallion layers. In our project, the design decision was to keep Bronze lightweight and introduce Delta where transactional features became necessary.</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">2. Why not Delta?</span><br>
+Bronze doesn't require ACID transactions, time travel, or frequent updates, so Parquet keeps the raw ingestion layer simple and cost-effective.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">3. How is Bronze partitioned?</span><br>
+We partition Bronze by <b>ingest_date</b> for efficient partition pruning and manageable metadata </p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">❓ Why partition by ingest_date instead of business date?</span><br>
+Business date partitioning in Bronze breaks on late-arriving records — a June 1st event arriving June 30th would require rewriting a 29-day-old partition. Ingest date keeps Bronze strictly append-only; late arrivals just land in today's partition and Silver MERGE handles them correctly on business key</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">5. How did you handle small files?</span><br>
+Our ingestion volume was moderate, so small files weren't a significant issue. Downstream Delta tables optimize file layout during writes.
+</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">6. What compression did Parquet use?</span><br>
+We used Parquet's default Snappy compression, which provides a good balance between compression and read performance.
+</p>
+
+</div>`,
                 children: [],
+
             },
+
         ],
     },
-    /////////////////////////////////
+    /////////////////////////////////CSV
     {
         cat: "Bronze",
         q: "CSV",
@@ -800,16 +906,47 @@ Multiple tasks can update the metadata table simultaneously because each task up
                 a: `The reference files are provided by the respective business teams—for example, the provider management team publishes the monthly provider roster, while finance provides the annual fee schedule and the client's data operations team uploads all these files to the ADLS landing area.<br> Since these datasets are refreshed only monthly or annually and delivery dates can vary, the operations team manually triggers the corresponding Databricks Workflow after confirming the file has been received.`,
                 children: [],
             },
+            {
+                q: `is eligibility , claim adjudication , prior_auth whole or just delta records we receive ?`,
+                a: `The eligibility, claims adjudication, and prior authorization files are daily incremental extracts containing only new or changed records since the previous delivery. We ingest these deltas and use MERGE in Silver to maintain a cumulative dataset without creating duplicates.`,
+                children: [],
+            },
         ],
     },
-    //////////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////////Silver
     {
         cat: " Architecture",
         q: "Arcitecture - Silver",
         answer: ``,
-        children: [],
+        children: [
+            {
+                q:`Purpose and Storage`,
+                a:``,
+                children:[],
+            },
+            {
+                q:`DQ, cleansing & Schema`,
+                a:``,
+                children:[],
+            },
+            {
+                q:`Idempotency , failure,retry`,
+                a:``,
+                children:[],
+            },
+            {
+                q:`Optimizations`,
+                a:``,
+                children:[],
+            },
+            {
+                q:`Edge cases, Production &Traps`,
+                a:``,
+                children:[],
+            },
+        ],
     },
-    //////////////////////////////////////////////////////////
+    //////////////////////////////////////////////////////////Gold
     {
         cat: " Architecture",
         q: "Arcitecture - Gold",
