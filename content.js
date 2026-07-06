@@ -833,7 +833,7 @@ Bronze doesn't require ACID transactions, time travel, or frequent updates, so P
 We partition Bronze by <b>ingest_date</b> for efficient partition pruning and manageable metadata </p>
 
 <p>
-<span style="color:#1F618D;font-weight:bold;">❓ Why partition by ingest_date instead of business date?</span><br>
+<span style="color:#1F618D;font-weight:bold;">4. Why partition by ingest_date instead of business date?</span><br>
 Business date partitioning in Bronze breaks on late-arriving records — a June 1st event arriving June 30th would require rewriting a 29-day-old partition. Ingest date keeps Bronze strictly append-only; late arrivals just land in today's partition and Silver MERGE handles them correctly on business key</p>
 
 <p>
@@ -845,6 +845,10 @@ Our ingestion volume was moderate, so small files weren't a significant issue. D
 <span style="color:#1F618D;font-weight:bold;">6. What compression did Parquet use?</span><br>
 We used Parquet's default Snappy compression, which provides a good balance between compression and read performance.
 </p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;">7.  If Delta stores data as Parquet files, why not use Parquet directly?</span><br>
+Parquet is only a file format. Delta adds a transaction log that enables ACID transactions, MERGE, schema enforcement, versioning, and reliable concurrent reads and writes.</p>
 
 </div>`,
                 children: [],
@@ -921,27 +925,307 @@ We used Parquet's default Snappy compression, which provides a good balance betw
         children: [
             {
                 q:`Purpose and Storage`,
-                a:``,
-                children:[],
+                a:`
+                <p><span style="color:#1565C0;"><b>Q1. What is the purpose of the Silver layer?</b></span></p>
+<p>The Silver layer transforms raw Bronze data into clean, standardized, and trusted datasets by applying data quality validations, deduplication, datatype standardization, and business-level cleansing before making it available for downstream processing.</p>
+
+<p><span style="color:#1565C0;"><b>Q2. Why can't we use Bronze directly?</b></span></p>
+<p>Bronze preserves raw source data exactly as received, including duplicates, inconsistent formats, and invalid records. Gold requires reliable, standardized data, so Silver acts as the quality gate between raw ingestion and business consumption.</p>
+
+<p><span style="color:#1565C0;"><b>Q3. What transformations happen in Silver?</b></span></p>
+<p>We perform datatype standardization, null handling, deduplication, business key validation, audit enrichment, and MERGE incremental changes into cumulative Delta tables. Reference datasets are fully refreshed whenever new versions arrive.</p>
+
+<p><span style="color:#1565C0;"><b>Q4. Is there a one-to-one mapping between Bronze and Silver?</b></span></p>
+<p>Yes. Each Bronze operational dataset has a corresponding Silver table with the same business entity, but Silver contains cleaned, standardized, and deduplicated data instead of raw records.</p>
+
+<p><span style="color:#1565C0;"><b>Q5. Does Silver keep history?</b></span></p>
+<p>NO. Silver is intended to provide the latest trusted operational view. Historical tracking belongs in Gold, where dimensions maintain business history using SCD Type 2.</p>
+
+<p><span style="color:#1565C0;"><b>Q6.1 Why not maintain history in Silver too?</b></span></p>
+<p>Maintaining history in both Silver and Gold duplicates storage and processing. Since business history is already handled in Gold, Silver focuses on providing a clean operational view.</p>
+
+<p><span style="color:#1565C0;"><b>Q7. Why not load Gold directly from Bronze?</b></span></p>
+<p>That would mix data cleansing with business transformations, increasing complexity and duplication. Silver centralizes reusable cleansing logic so Gold can focus only on analytics-ready modeling.</p>
+####
+
+<p><span style="color:#1565C0;"><b>Q3. Why is MERGE used in the Silver layer?</b></span></p>
+<p>MERGE performs inserts and updates atomically in a single transaction, simplifying the logic while maintaining data consistency witoutusing INSERT and UPDATE statements seperately.</p>
+
+<p><span style="color:#1565C0;"><b>Q4. Why not overwrite the Silver table every day?</b></span></p>
+<p>Only a small portion of records changes daily. MERGE processes only incremental changes, reducing compute time, I/O, and overall pipeline execution cost.</p>
+
+<p><span style="color:#1565C0;"><b>Q5. What is the MERGE matching condition?</b></span></p>
+<p>We match records using the business key of each dataset, such as patient_id, provider_id, claim_id, or encounter_id, depending on the entity being processed.</p>
+
+<p><span style="color:#1565C0;"><b>Q9. Does MERGE support ACID transactions?</b></span></p>
+<p>Yes. Delta Lake guarantees ACID transactions, ensuring that either the entire MERGE succeeds or no changes are committed.</p>
+
+<p><span style="color:#1565C0;"><b>Q10. What happens if the job fails during MERGE?</b></span></p>
+<p>No partial updates are committed. Delta rolls back the incomplete transaction, keeping the Silver table in a consistent state.</p>
+
+<p><span style="color:#1565C0;"><b>Q11. Can multiple jobs read the table while MERGE is running?</b></span></p>
+<p>Yes. Delta uses snapshot isolation, allowing readers to continue accessing the last committed version while the MERGE is in progress.</p>
+
+<p><span style="color:#1565C0;"><b>Q12. Why is Delta a good choice for production pipelines?</b></span></p>
+<p>It provides reliable transactions, scalable incremental processing, schema management, and better operational stability than plain Parquet.</p>
+`,
+
+             children:[],
             },
             {
                 q:`DQ, cleansing & Schema`,
-                a:``,
+                a:`
+<p><span style="color:#1565C0;"><b>Q2. Why are data quality validations performed in Silver instead of Bronze?</b></span></p>
+<p>Bronze preserves raw source data for audit and replay. Silver is the first layer where data is cleaned and standardized for downstream consumption.</p>
+
+<p><span style="color:#1565C0;"><b>Q3. How do you handle null values?</b></span></p>
+<p>Mandatory business key columns such as patient_id or claim_id cannot be null, so those invalid records are quarantined to a separate bad_records table with the validation failure reason. Optional columns are allowed to remain null or assigned default values based on business requirements.</p>
+
+<p><span style="color:#1565C0;"><b>Q4. Which columns are mandatory in your project?</b></span></p>
+<p>Business key columns like patient_id, provider_id, encounter_id, and claim_id are mandatory because they uniquely identify operational records.</p>
+
+<p><span style="color:#1565C0;"><b>Q6. How do you standardize data types?</b></span></p>
+<p>Columns are explicitly cast to their expected data types, such as dates to DATE, timestamps to TIMESTAMP, and numeric values to appropriate numeric types.</p>
+
+<p><span style="color:#1565C0;"><b>Q7. Why is datatype standardization important?</b></span></p>
+<p>It ensures consistent joins, accurate calculations, and prevents runtime errors in downstream processing.</p>
+
+<p><span style="color:#1565C0;"><b>Q8. How do you remove duplicate records?</b></span></p>
+<p>Duplicates are identified using the business key. If multiple records exist for the same key, only the latest record is retained before the MERGE.</p>
+
+<p><span style="color:#1565C0;"><b>Q9. How do you identify the latest duplicate record?</b></span></p>
+<p>We use a window function with ROW_NUMBER() ordered by the source update timestamp in descending order and keep only the first record.</p>
+
+<p><span style="color:#1565C0;"><b>Q10. Why remove duplicates before MERGE?</b></span></p>
+<p>MERGE expects a single source record for each business key. Removing duplicates prevents conflicts and ensures deterministic updates.</p>
+###
+<p><span style="color:#1565C0;"><b>Q1. What is schema enforcement?</b></span></p>
+<p>Schema enforcement ensures incoming data matches the expected table schema. Records with incompatible data types or invalid columns are rejected, maintaining data consistency.</p>
+
+<p><span style="color:#1565C0;"><b>Q1. Do you use schema enforcement in silvere</b></span></p>
+<p> Yes. We enforce schemas to ensure incoming data matches the expected structure before applying business transformations, preventing unexpected changes from propagating downstream.
+</p>
+
+<p><span style="color:#1565C0;"><b>Q3. What is schema evolution?</b></span></p>
+<p>Schema evolution allows compatible schema changes, such as adding new columns, without recreating the Delta table or reloading historical data.</p>
+
+<p><span style="color:#1565C0;"><b>Q3. Do you use schema evolution?</b></span></p>
+<p> No. We don't enable automatic schema evolution for production healthcare data. Any schema change is reviewed, implemented through a controlled code release, and then reprocessed.
+</p>
+
+<p><span style="color:#1565C0;"><b>Q5. what if new col added / missing req cols / renamed req col</b></span></p>
+<p>
+MISSING/RENAME REQ COLS: The pipeline fails schema validation, logs the error, generates an alert, and waits for a corrected file or approved schema update.<br>
+if new col: If all expected columns are present, we ignore the additional column, log a schema warning, and notify the team for review without interrupting the pipeline.
+</p>
+
+<p><span style="color:#1565C0;"><b>Q7. What happens if the datatype changes from INT to STRING?</b></span></p>
+<p>This is treated as a breaking schema change. The pipeline fails validation until the schema change is reviewed and handled appropriately.</p>
+
+<p>
+<span style="color:#1F618D;font-weight:bold;"> Why not allow schema evolution automatically?</span><br>
+Automatic schema evolution can silently introduce unexpected columns or structural changes. We prefer controlled changes to protect downstream consumers.
+</p>
+
+<p><span style="color:#1565C0;"><b>Q8. Does Delta automatically handle every schema change?</b></span></p>
+<p>No. Delta supports compatible schema evolution, but breaking changes still require developer intervention.</p>
+
+<p><span style="color:#1565C0;"><b>Q9. How does schema enforcement improve data quality?</b></span></p>
+<p>It prevents inconsistent data structures from entering Silver, reducing downstream failures and ensuring predictable table schemas.</p>
+
+
+`,
                 children:[],
             },
             {
                 q:`Idempotency , failure,retry`,
-                a:``,
+                a:`
+                <p><span style="color:#1565C0;"><b>Q1. What is idempotency?</b></span></p>
+<p>Idempotency means running the same pipeline multiple times with the same input produces the same final result without creating duplicate or inconsistent records.</p>
+
+<p><span style="color:#1565C0;"><b>Q3. How do you achieve idempotency in your Silver layer?</b></span></p>
+<p>We deduplicate incoming data and use Delta MERGE based on business keys, ensuring existing records are updated and new records are inserted only once.</p>
+
+<p><span style="color:#1565C0;"><b>Q4. How do you process incremental data?</b></span></p>
+<p>Bronze receives incremental operational data, and Silver processes only the newly arrived records before merging them into cumulative Delta tables.</p>
+
+<p><span style="color:#1565C0;"><b>Q6. How do you identify records to update?</b></span></p>
+<p>Records are matched using the business key during the MERGE operation. If the key exists, the record is updated; otherwise, a new record is inserted.</p>
+
+<p><span style="color:#1565C0;"><b>Q9. Can Silver recover after a pipeline failure?</b></span></p>
+<p>Yes. Since the pipeline is idempotent, it can be safely rerun after fixing the issue, and Delta ensures only valid committed transactions are retained.</p>
+
+<p><span style="color:#1565C0;"><b>Q10. What role does Delta Lake play in idempotency?</b></span></p>
+<p>Delta Lake provides ACID transactions and atomic MERGE operations, ensuring consistent results even when pipelines are retried.</p>
+
+###
+<p><span style="color:#1565C0;"><b>Q1. How do you handle failures in the Silver pipeline?</b></span></p>
+<p>If a pipeline fails, the execution stops and no partial data is committed because Delta Lake provides atomic transactions. After fixing the issue, the job can be safely rerun.</p>
+
+<p><span style="color:#1565C0;"><b>Q5. What information do you log during processing?</b></span></p>
+<p>We capture audit information such as  processing timestamp, source file details, and pipeline execution status to support troubleshooting and auditing.</p>
+
+<p><span style="color:#1565C0;"><b>Q7. Why quarantine invalid records instead of dropping them?</b></span></p>
+<p>Quarantining preserves invalid records for investigation and possible correction without affecting the quality of trusted Silver data.</p>
+
+<p><span style="color:#1565C0;"><b>Q10. How does Delta Lake help during failures?</b></span></p>
+<p>Delta provides ACID transactions and versioning, ensuring failed writes are rolled back and previously committed data remains available for reading.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can users still read the Silver table while a MERGE is running?</b></span></p>
+<p>Yes. Delta's snapshot isolation allows readers to access the last committed version until the current transaction completes.</p>
+`,
                 children:[],
             },
             {
                 q:`Optimizations`,
-                a:``,
+                a:`
+
+<p><span style="color:#1565C0;"><b>Q2. Why is performance optimization important in Silver?</b></span></p>
+<p>Silver processes cleaned operational data consumed by multiple downstream pipelines, so faster execution reduces overall pipeline latency and compute cost.</p>
+
+--<p><span style="color:#1565C0;"><b>Q1. How did you optimize the performance of your Silver pipelines?</b></span></p>
+<p>We optimized Spark jobs using partitioning, caching where appropriate, Delta OPTIMIZE, and file compaction, reducing pipeline runtime by around 40–45%.</p>
+
+
+<p><span style="color:#1565C0;"><b>Q3. Why do small files affect performance?</b></span></p>
+<p>Reading thousands of small files increases metadata operations and task scheduling overhead, resulting in slower query and pipeline execution.</p>
+
+<p><span style="color:#1565C0;"><b>Q4. How do you solve the small file problem?</b></span></p>
+<p>We periodically run Delta OPTIMIZE, which compacts many small files into fewer larger files, improving read performance.</p>
+
+<p><span style="color:#1565C0;"><b>Q5. What is OPTIMIZE?</b></span></p>
+<p>OPTIMIZE is a Delta Lake command that compacts small files into larger files to improve query efficiency and reduce file management overhead.</p>
+
+<p><span style="color:#1565C0;"><b>Q6. What is Z-ORDER?</b></span></p>
+<p>Z-ORDER is a Delta Lake optimization that colocates related data within files based on specified columns. This improves data skipping, allowing Spark to read fewer files when queries filter on those columns.</p>
+
+<p><span style="color:#1565C0;"><b>Q6.1 Why did you choose patient_id, provider_id, and claim_id for Z-ORDER?</b></span></p>
+<p>These are frequently used in joins and lookups by downstream pipelines. Clustering data on these columns improves data skipping and reduces I/O during query execution.</p>
+
+<p><span style="color:#D32F2F;"><b>Q6.2 Can you Z-ORDER every column in a table?</b></span></p>
+<p>No. Z-ORDER should be applied only to a small number of frequently filtered or joined columns. Using too many columns reduces its effectiveness and increases optimization time.</p>
+
+<p><span style="color:#1565C0;"><b>Q8. How do partitioning and Z-ORDER differ?</b></span></p>
+<p>Partitioning eliminates unnecessary partitions during reads, while Z-ORDER improves data locality within those partitions by clustering frequently queried columns.</p>
+
+<p><span style="color:#1565C0;"><b>Q9. Did you partition your Silver tables?</b></span></p>
+<p>No. Our Silver tables are cumulative and relatively moderate in size (~45–50 GB/day across all datasets). We relied on Delta optimization techniques instead of creating many partitions that could lead to small-file issues.</p>
+
+<p><span style="color:#1565C0;"><b>Q11. What is VACUUM?</b></span></p>
+<p>VACUUM removes obsolete data files that are no longer referenced by the Delta transaction log, helping reclaim storage space.</p>
+
+<p><span style="color:#1565C0;"><b>Q12. Does VACUUM improve query performance?</b></span></p>
+<p>No. Its primary purpose is storage cleanup. Query performance is mainly improved through OPTIMIZE and Z-ORDER.</p>
+
+<p><span style="color:#1565C0;"><b>Q10. When do you use cache?</b></span></p>
+<p>We cache DataFrames only when they are reused multiple times within the same job. For one-time transformations, caching is avoided because it unnecessarily consumes cluster memory.</p>
+
+<p><span style="color:#1565C0;"><b>Q13. Did you use Time Travel?</b></span></p>
+<p>Yes. Time Travel was used mainly for debugging, data validation, and recovering previous table versions when needed.</p>
+
+                `,
                 children:[],
             },
             {
-                q:`Edge cases, Production &Traps`,
-                a:``,
+                q:`Edge cases, Production &Traps , real time , Backfills
+                `,
+                a:`
+
+--<p><span style="color:#1565C0;"><b>Q3. What if the source sends a delete?</b></span></p>
+<p>In our project, source deletes are not received. If they were introduced in the future, the MERGE logic could be extended to delete or soft-delete the corresponding Silver record based on business requirements.</p>
+
+<p><span style="color:#1565C0;"><b>Q6. Why don't you use Change Data Feed (CDF)?</b></span></p>
+<p>Change Data Feed is mainly useful for tracking changes within Delta tables. Since our Silver layer consumes incremental data from Bronze and maintains the latest state using MERGE, enabling CDF was not necessary for our current architecture</p>
+
+<p><span style="color:#1565C0;"><b>Q7. Why not use SCD Type 2 in Silver?</b></span></p>
+<p>Silver is intended to provide the latest trusted operational view. Historical tracking belongs in Gold, where dimensions maintain business history using SCD Type 2.</p>
+
+<p><span style="color:#1565C0;"><b>Q10. If someone accidentally deletes data from the Silver table, how can you recover it?</b></span></p>
+<p>Delta Lake Time Travel allows recovery of previous table versions, provided the required version has not been removed by VACUUM.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not perform all transformations in Gold?</b></span></p>
+<p>Cleaning data separately in Silver makes it reusable across multiple Gold datasets and avoids duplicating validation logic in every downstream pipeline.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: What is the single most important responsibility of the Silver layer?</b></span></p>
+<p>To transform raw Bronze data into a clean, validated, standardized, and trusted dataset that serves as the foundation for all downstream processing.</p>
+
+####Bckfills
+<p><span style="color:#1565C0;"><b>Q1. What is a historical backfill?</b></span></p>
+<p>A historical backfill is the process of loading and processing previously unavailable historical data  to populate downstream tables.</p>
+
+<p><span style="color:#1565C0;"><b>Q2. When is a historical backfill required?</b></span></p>
+<p>It is required during initial platform setup(running from 3 months, need last  year), after extended pipeline failures(continuos 3 days), when onboarding a new data source, or when business requests historical reporting.</p>
+
+<p><span style="color:#1565C0;"><b>Q3. How would you perform a historical backfill in your project?</b></span></p>
+<p>I would ingest the historical data into Bronze and process it through the existing Silver pipeline using the same validations, deduplication, and MERGE logic as the daily load.</p>
+
+<p><span style="color:#1565C0;"><b>Q5. Will historical backfill create duplicate records?</b></span></p>
+<p>No. The Silver layer uses idempotent processing with MERGE based on business keys, so existing records are updated and new records are inserted without creating duplicates.</p>
+
+--<p><span style="color:#1565C0;"><b>Q8. How do you ensure historical data follows the same business rules as current data?</b></span></p>
+<p>We reuse the same production pipeline and transformation logic, ensuring historical and incremental data are processed consistently.</p>
+
+<p><span style="color:#1565C0;"><b>Q9. What challenges can occur during a historical backfill?</b></span></p>
+<p>Large data volumes can increase processing time and compute costs, so backfills are typically executed in batches and monitored closely.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: How is a historical backfill different from a regular incremental load?</b></span></p>
+<p>Incremental loads process only newly arrived data, whereas historical backfills process older data that was never loaded or needs to be reprocessed.</p>
+
+<p><span style="color:#D32F2F;"><b> How do you backfill last 2 years data?</b></span></p>
+<p>I would execute the existing pipeline in backfill mode, passing the required date range. <br>Rather than processing two years in a single run, I would process it in smaller batches (for example monthly) and monitor each execution.<br> Since the Silver layer uses idempotent MERGE operations, failed batches can be safely retried without creating duplicate records.
+<code class="language-python">
+##inside bronze
+if mode == "daily":
+      query= "where update_at>last_ts"
+
+else:
+      query= "select * from table where update_at between start_date and end_date"
+</code>
+</p>
+`,
+                children:[],
+            },
+            {
+                q:`SChenario `,
+                a:`
+                <p><span style="color:#1565C0;"><b>Q1. Why is the Silver layer stored as cumulative tables instead of daily tables?</b></span></p>
+<p>Cumulative tables provide a single, up-to-date view of each business entity, making downstream joins and analytics simpler while avoiding unnecessary unions across daily datasets.</p>
+
+<p><span style="color:#1565C0;"><b>Q2. Why don't you join multiple tables in the Silver layer?</b></span></p>
+<p> Silver stays 1:1 with Bronze intentionally — each Silver table is Bronze's cleaned counterpart, same grain, so lineage stays traceable. Joining/combining tables (e.g., Claims + Diagnoses) is a Gold concern, not Silver's job.
+</p>
+
+<p><span style="color:#1565C0;"><b>Q3. What happens if a required source table is missing for today's run?</b></span></p>
+<p>The affected Silver pipeline fails, preventing incomplete data from being loaded. The issue is investigated before rerunning the pipeline.</p>
+
+<p><span style="color:#1565C0;"><b>Q4. Can Gold consume Bronze directly if required?</b></span></p>
+<p>Technically yes, but it is not recommended because Bronze contains raw, unvalidated data. Gold should consume only trusted Silver datasets.</p>
+
+<p><span style="color:#1565C0;"><b>Q5. How would you backfill six months of historical data?</b></span></p>
+<p>We would ingest the historical data into Bronze, process it through the same Silver transformation logic, and use MERGE to populate the cumulative Delta tables, ensuring consistency with regular pipeline executions.</p>
+
+<p><span style="color:#1565C0;"><b>Q6. What makes your Silver layer production-ready?</b></span></p>
+<p>It uses incremental processing, Delta MERGE, schema enforcement, data quality validation, deduplication, idempotent processing, Delta optimizations, and centralized monitoring through Databricks Workflows.</p>
+
+<p><span style="color:#D32F2F;"><b>Q.7 If Silver only stores the latest record, what happens if a patient's address changes?</b></span></p>
+<p>The latest patient record replaces the previous version in Silver through a MERGE operation. Historical address changes are preserved later in the Gold Patient Dimension using SCD Type 2.</p>
+
+<p><span style="color:#D32F2F;"><b> Q8. Why don't you MERGE the reference files like ICD or CPT?</b></span></p>
+<p>Reference datasets are relatively small and delivered as complete versions. We perform a full refresh whenever a new version is received, which is simpler and more efficient than incremental MERGE.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: What happens if duplicate records contain different values?</b></span></p>
+<p>We retain the latest record based on the source update timestamp, assuming it represents the most recent operational state.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can idempotency be achieved using INSERT INTO instead of MERGE?</b></span></p>
+<p>No. Repeated INSERT operations create duplicate records. MERGE updates existing records and inserts only new ones, making reruns safe.</p>
+
+p><span style="color:#D32F2F;"><b>Interview Trap: Why didn't you partition the Silver tables?</b></span></p>
+<p>Our Silver tables did not justify partitioning because it could create excessive small files. Delta OPTIMIZE and Z-ORDER provided better performance for our workload.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not cache every DataFrame?</b></span></p>
+<p>Unnecessary caching wastes executor memory and may reduce overall Spark performance. Cache should only be used when the same DataFrame is reused multiple times.</p>
+
+`,
                 children:[],
             },
         ],
