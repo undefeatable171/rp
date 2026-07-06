@@ -1081,17 +1081,23 @@ Automatic schema evolution can silently introduce unexpected columns or structur
                 a:`
 
 <p><span style="color:#1565C0;"><b>Q2. Why is performance optimization important in Silver?</b></span></p>
-<p>Silver processes cleaned operational data consumed by multiple downstream pipelines, so faster execution reduces overall pipeline latency and compute cost.</p>
+<p>We optimized Spark jobs by processing only incremental data, using Delta MERGE instead of full reloads, periodically running OPTIMIZE to compact small files, applying Z-ORDER on frequently filtered business keys, and caching DataFrames only when reused. These optimizations reduced pipeline runtime by around 40–45%.</p>
 
 --<p><span style="color:#1565C0;"><b>Q1. How did you optimize the performance of your Silver pipelines?</b></span></p>
 <p>We optimized Spark jobs using partitioning, caching where appropriate, Delta OPTIMIZE, and file compaction, reducing pipeline runtime by around 40–45%.</p>
 
 
 <p><span style="color:#1565C0;"><b>Q3. Why do small files affect performance?</b></span></p>
-<p>Reading thousands of small files increases metadata operations and task scheduling overhead, resulting in slower query and pipeline execution.</p>
+<p>>Frequent MERGE operations generate many small files over time. Reading thousands of small files increases metadata operations and task scheduling overhead, resulting in slower query and pipeline execution.</p>
 
 <p><span style="color:#1565C0;"><b>Q4. How do you solve the small file problem?</b></span></p>
-<p>We periodically run Delta OPTIMIZE, which compacts many small files into fewer larger files, improving read performance.</p>
+<p>We periodically run Delta OPTIMIZE, which compacts many small files into fewer larger files, improving read performance.
+</p>
+
+<p><span style="color:#1565C0;"><b>Q5.  How often do you run OPTIMIZE</b></span></p>
+
+<p> OPTIMIZE is scheduled as a maintenance activity based on table growth and small-file accumulation. In our project, we ran it periodically outside ingestion hours rather than after every MERGE to balance query performance and compute cost.<bt
+Typically every few days (around 3–7 days) for frequently updated Silver tables, while low-change reference tables were optimized less frequently></p>
 
 <p><span style="color:#1565C0;"><b>Q5. What is OPTIMIZE?</b></span></p>
 <p>OPTIMIZE is a Delta Lake command that compacts small files into larger files to improve query efficiency and reduce file management overhead.</p>
@@ -1162,8 +1168,8 @@ Automatic schema evolution can silently introduce unexpected columns or structur
 <p><span style="color:#1565C0;"><b>Q5. Will historical backfill create duplicate records?</b></span></p>
 <p>No. The Silver layer uses idempotent processing with MERGE based on business keys, so existing records are updated and new records are inserted without creating duplicates.</p>
 
---<p><span style="color:#1565C0;"><b>Q8. How do you ensure historical data follows the same business rules as current data?</b></span></p>
-<p>We reuse the same production pipeline and transformation logic, ensuring historical and incremental data are processed consistently.</p>
+<p><span style="color:#1565C0;"><b>Q8. How do you ensure historical data follows the same business rules as current data?</b></span></p>
+<p>We reuse the same production pipeline and transformation logic with backfill mode, ensuring historical and incremental data are processed consistently.</p>
 
 <p><span style="color:#1565C0;"><b>Q9. What challenges can occur during a historical backfill?</b></span></p>
 <p>Large data volumes can increase processing time and compute costs, so backfills are typically executed in batches and monitored closely.</p>
