@@ -1081,10 +1081,10 @@ Automatic schema evolution can silently introduce unexpected columns or structur
                 a:`
 
 <p><span style="color:#1565C0;"><b>Q2. Why is performance optimization important in Silver?</b></span></p>
-<p>We optimized Spark jobs by processing only incremental data, using Delta MERGE instead of full reloads, periodically running OPTIMIZE to compact small files, applying Z-ORDER on frequently filtered business keys, and caching DataFrames only when reused. These optimizations reduced pipeline runtime by around 40–45%.</p>
+<p>Silver processes cleaned operational data consumed by multiple downstream pipelines, so faster execution reduces overall pipeline latency and compute cost.</p>
 
---<p><span style="color:#1565C0;"><b>Q1. How did you optimize the performance of your Silver pipelines?</b></span></p>
-<p>We optimized Spark jobs using partitioning, caching where appropriate, Delta OPTIMIZE, and file compaction, reducing pipeline runtime by around 40–45%.</p>
+<p><span style="color:#1565C0;"><b>Q1. How did you optimize the performance of your Silver pipelines?</b></span></p>
+<p>We optimized Spark jobs by processing only incremental data, using Delta MERGE instead of full reloads, periodically running OPTIMIZE to compact small files, applying Z-ORDER on frequently filtered business keys, and caching DataFrames only when reused. </p>
 
 
 <p><span style="color:#1565C0;"><b>Q3. Why do small files affect performance?</b></span></p>
@@ -1096,8 +1096,7 @@ Automatic schema evolution can silently introduce unexpected columns or structur
 
 <p><span style="color:#1565C0;"><b>Q5.  How often do you run OPTIMIZE</b></span></p>
 
-<p> OPTIMIZE is scheduled as a maintenance activity based on table growth and small-file accumulation. In our project, we ran it periodically outside ingestion hours rather than after every MERGE to balance query performance and compute cost.<bt
-Typically every few days (around 3–7 days) for frequently updated Silver tables, while low-change reference tables were optimized less frequently></p>
+<p> We scheduled OPTIMIZE periodically based on table growth and query performance. In our environment, a roughly biweekly schedule provided a good balance between query performance and compute cost<br>
 
 <p><span style="color:#1565C0;"><b>Q5. What is OPTIMIZE?</b></span></p>
 <p>OPTIMIZE is a Delta Lake command that compacts small files into larger files to improve query efficiency and reduce file management overhead.</p>
@@ -1242,6 +1241,632 @@ p><span style="color:#D32F2F;"><b>Interview Trap: Why didn't you partition the S
         q: "Arcitecture - Gold",
         answer: ``,
         children: [
+            {
+                q:`Purpose of Gold & Incremental Processing`,
+                a:`
+                <div>
+<p><span style="color:#1565C0;"><b>Q: What is the purpose of the Gold layer?</b></span><br>
+Gold is our business consumption layer. It reads incremental data from the Silver layer, enriches it with SCD Type 2 dimensions and reference datasets, builds business-ready fact and dimension tables using a Star Schema, and loads them incrementally using Delta MERGE for downstream reporting and analytics.</p>
+<p><span style="color:#1565C0;"><b>Q: Why not query Silver directly?</b></span><br>
+Silver contains normalized operational data. Gold centralizes joins, history, and business logic for consistent reporting.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Who consumes Gold?</b></span><br>
+Finance, BI, and Data Science teams consume Gold datasets.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What transformations happen in Gold?</b></span><br>
+Dimensional modeling, SCD Type 2 history, business enrichments, surrogate key lookups, reference joins, and analytics-ready fact creation.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why separate facts and dimensions?</b></span><br>
+Dimensions describe entities, while facts store measurable business events for efficient analytics.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why can't Silver become the reporting layer?</b></span><br>
+Silver is optimized for data quality and integration, not analytics. Reporting directly on Silver duplicates business logic.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: If BI defines KPIs, why does Gold exist?</b></span><br>
+Gold provides standardized facts and dimensions. BI defines dashboard-specific KPIs using those datasets.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Could you eliminate the Gold layer?</b></span><br>
+Only in very small environments. Production systems benefit from Gold's standardized business model.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Is Gold rebuilt every day?</b></span><br>
+No.
+We process the incremental data available in Silver for each run and compare it with the current Gold records. Business key matching and tracked attribute comparison determine whether a new SCD2 version or fact update is required
+</p>
+####
+
+<p><span style="color:#1565C0;"><b>Q: How is your Gold layer loaded?</b></span><br>
+The Gold layer is loaded incrementally by processing only new and changed records from Silver. It reduces compute cost, shortens runtime, and scales efficiently.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How are dimensions loaded incrementally?</b></span><br>
+Latest Silver records are compared with current Gold dimensions, creating new SCD2 versions only when tracked business attributes change.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How are fact tables loaded incrementally?</b></span><br>
+New claims are inserted and changed claims are updated using Delta MERGE.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why use MERGE?</b></span><br>
+MERGE efficiently handles inserts and updates while preventing duplicate records.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is the MERGE key for facts?</b></span><br>
+The business key of the claim is used to identify existing fact records.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you ensure idempotency?</b></span><br>
+Deterministic MERGE conditions prevent duplicate records during reruns.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Do you rebuild the full Gold layer during backfills?</b></span><br>
+No. Only the affected date range or impacted records are reprocessed whenever possible.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Can facts and dimensions be loaded independently?</b></span><br>
+Yes. Dimensions are loaded first so facts can resolve surrogate keys.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why are dimensions loaded before facts?</b></span><br>
+Facts depend on valid surrogate keys from the dimensions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if no new records arrive?</b></span><br>
+The pipeline completes successfully without modifying Gold.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not truncate and reload Gold every day?</b></span><br>
+Incremental processing is faster, cheaper, and scales better.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: If one claim changes after six months, do you rebuild the whole table?</b></span><br>
+No. Only the changed claim is processed through incremental MERGE.</p>
+</div>
+                
+                `,
+                children:[],
+            },
+            {
+                q:`Data Modeling`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: What is dimensional modeling?</b></span><br>
+Dimensional modeling organizes data into fact and dimension tables to simplify analytics and improve query performance.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is a fact table?</b></span><br>
+A fact table stores measurable business events, such as healthcare claims, along with foreign keys to related dimensions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is a dimension table?</b></span><br>
+A dimension table stores descriptive business attributes used to filter and analyze facts.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is your main Gold fact table?</b></span><br>
+Our primary fact table is Fact Claims, built from cleaned Silver claims and enriched with surrogate keys from business dimensions and reference data.</p>
+
+
+<p><span style="color:#1565C0;"><b>Q: What is a Star Schema?</b></span><br>
+A Star Schema has one central fact table connected directly to multiple denormalized dimension tables.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why did you choose Star Schema?</b></span><br>
+It reduces joins, improves query performance, and is easier for BI users to understand.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not Snowflake Schema?</b></span><br>
+Snowflake reduces storage but increases joins and query complexity, making Star Schema better for analytics.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is the grain of your Fact Claims table?</b></span><br>
+One record represents one finalized claim.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is a surrogate key?</b></span><br>
+A surrogate key is a system-generated identifier used to support SCD Type 2 history and joins.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not use natural keys?</b></span><br>
+Natural keys can change and cannot distinguish historical versions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why do facts store surrogate keys?</b></span><br>
+They ensure facts reference the correct historical version of each dimension.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Can natural keys still exist?</b></span><br>
+Yes. Natural keys remain for business identification, while surrogate keys are used for joins.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is a conformed dimension?</b></span><br>
+A conformed dimension is shared across multiple fact tables to provide consistent business definitions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: what happened to encounters?</b></span><br>
+his reporting domain is claims-centric, so the primary Gold fact is Fact Claims; Encounter data is retained in Silver and can support future analytical facts if business reporting requires them.</p>
+
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why don't you normalize dimensions?</b></span><br>
+Denormalized dimensions reduce joins and improve reporting performance.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not use Claim ID as the primary key?</b></span><br>
+Claim ID is the business key, while facts reference surrogate keys for historical dimensions.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: If a Provider changes specialty, do historical claims change?</b></span><br>
+No. Historical facts continue referencing the older provider dimension version.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why keep both natural and surrogate keys?</b></span><br>
+Natural keys identify the business entity, while surrogate keys identify each historical version.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can two surrogate keys have the same Patient ID?</b></span><br>
+Yes. Each surrogate key represents a different historical version of the same patient.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not generate surrogate keys in Silver?</b></span><br>
+Silver focuses on clean enterprise data. Surrogate keys and SCD2 belong in Gold where dimensional history is maintained.</p>
+
+</div>
+                `,
+                children:[],
+            },
+            {
+                q:`-----SCD 2`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: What is SCD Type 2?</b></span><br>
+SCD Type 2 preserves complete history by inserting a new dimension version instead of overwriting the existing record.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why do you use SCD Type 2?</b></span><br>
+It enables accurate historical reporting by preserving attribute values as they existed when business events occurred.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Which tables use SCD Type 2?</b></span><br>
+Business dimensions such as Patient and Provider use SCD Type 2 because their descriptive attributes can change over time.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why only dimensions?</b></span><br>
+Facts store business events, while dimensions contain descriptive attributes that change over time.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not SCD Type 1?</b></span><br>
+SCD1 overwrites previous values and loses history. SCD2 preserves historical versions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you detect changes?</b></span><br>
+Tracked business attributes from Silver are compared with the current active dimension record. Only business attribute changes create new versions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Which columns are compared?</b></span><br>
+Only tracked business attributes. Audit and technical metadata are excluded.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What happens when a change is detected?</b></span><br>
+The current record is expired and a new version with a new surrogate key is inserted.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Which columns maintain history?</b></span><br>
+Effective Date, Expiry Date, Current Flag, surrogate key, and business key.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is Effective Date?</b></span><br>
+The date from which a dimension version becomes valid.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is Expiry Date?</b></span><br>
+The date when that version stops being valid. Active records use a future placeholder date.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is Current Flag?</b></span><br>
+It identifies the currently active version of a dimension.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why keep both Expiry Date and Current Flag?</b></span><br>
+Current Flag simplifies current-state queries, while Effective and Expiry Dates support historical lookups.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What happens when there is no change?</b></span><br>
+No update is performed, keeping the process idempotent.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How are surrogate keys generated?</b></span><br>
+A new surrogate key is generated only for newly inserted historical versions.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if multiple attributes change together?</b></span><br>
+A single new SCD2 version is created containing all changed attributes.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if multiple updates happen on the same day?</b></span><br>
+Each business change creates a new version, distinguished using effective timestamps.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do facts reference the correct dimension version?</b></span><br>
+Facts join to the appropriate active or time-valid dimension record and store its surrogate key.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why doesn't SCD2 create duplicate records?</b></span><br>
+Only tracked business attribute changes create new versions.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not update the existing row?</b></span><br>
+Updating would overwrite history and produce incorrect historical reporting.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Should historical claims show a patient's new address?</b></span><br>
+No. Historical claims continue referencing the older patient dimension version.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can two active records exist for the same patient?</b></span><br>
+No. Only one record can be active for a business key.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not compare every column?</b></span><br>
+Technical metadata changes should not generate historical versions.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: If only last_updated_timestamp changes, do you create a new version?</b></span><br>
+No. Technical metadata changes alone are ignored.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Does every change require a new surrogate key?</b></span><br>
+Only tracked business attribute changes create a new surrogate key.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why is SCD2 implemented in Gold instead of Silver?</b></span><br>
+Silver stores the latest trusted data, while Gold owns historical business modeling for analytics.</p>
+
+</div>
+
+                
+                `,
+                children:[],
+            },
+            {
+                q:`Fact Table`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: What is your Gold fact table?</b></span><br>
+Our primary Gold fact table is Fact Claims, built from the cleaned cumulative Silver claims table and enriched with business dimensions and reference data.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why did you choose Claims as the fact table?</b></span><br>
+Claims represent the primary business transaction for financial and operational reporting in our healthcare analytics platform.</p>
+
+<p><span style="color:#1565C0;"><b>Q:Walk me through how a claim reaches the Gold Fact table.?</b></span><br>
+The Gold pipeline reads only the changed incremental claims from Silver using the last successful processing watermark. Each claim is enriched by resolving Patient and Provider surrogate keys through SCD2 lookups, joined with reference data such as ICD-10, CPT, Fee Schedule, and Provider Roster, and then MERGEd into the Gold Fact Claims table.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What measures are stored in the fact table?</b></span><br>
+The fact table stores measures such as billed amount, allowed amount, paid amount, and claim count.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What are foreign keys in the fact table?</b></span><br>
+The fact table stores surrogate keys referencing business dimensions like Patient and Provider.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you populate Surrogate keys?</b></span><br>
+The lookup matches the business key and ensures the claim's business date falls between the dimension's Effective Date and Expiry Date, returning the correct historical surrogate key.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why use surrogate keys instead of natural keys?</b></span><br>
+Surrogate keys ensure facts reference the correct historical dimension version.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is an Unknown dimension?</b></span><br>
+A predefined dimension record representing missing lookup values, typically with a fixed surrogate key.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not reject the fact?</b></span><br>
+Loading the fact with an Unknown dimension preserves business events while allowing later correction.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What joins are used to build the fact table?</b></span><br>
+Silver claims are joined with dimensions and reference datasets before loading Gold.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What reference data is used?</b></span><br>
+ICD-10, CPT, Fee Schedule, and Provider Roster enrich claims with standardized business information.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Is the fact table updated or inserted?</b></span><br>
+Delta MERGE inserts new claims and updates changed claims incrementally.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why use MERGE instead of full reload?</b></span><br>
+MERGE processes only changed claims, reducing compute cost and improving scalability.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Can facts be deleted?</b></span><br>
+Normally no. Deletes occur only for validated source corrections.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why use an Unknown dimension instead of NULL?</b></span><br>
+Unknown dimensions preserve referential integrity and simplify downstream reporting.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: What if Patient is missing but Provider exists?</b></span><br>
+The claim is loaded with the Unknown Patient key while using the matched Provider key.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can one fact row reference multiple versions of the same patient?</b></span><br>
+No. Each fact references one surrogate key representing the correct historical version.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can measures change after loading?</b></span><br>
+Yes. Corrected source data is applied through incremental MERGE operations.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why isn't Claim ID the foreign key?</b></span><br>
+Claim ID identifies the fact, while foreign keys reference related business dimensions.</p>
+
+<p><span style="color:#D32F2F;"><b>Code for claims</b></span><br>
+<pre><code class="language-sql">
+SELECT
+    c.claim_id,
+    p.patient_sk,
+    pr.provider_sk
+FROM silver_claim c
+
+JOIN dim_patient p
+ON c.patient_id = p.patient_id
+AND c.claim_date BETWEEN p.effective_date
+                     AND p.expiry_date
+
+JOIN dim_provider pr
+ON c.provider_id = pr.provider_id
+AND c.claim_date BETWEEN pr.effective_date
+                      AND pr.expiry_date;</pre></code>
+</p>
+
+
+
+</div>
+
+                `,
+                children:[],
+            },
+            {
+                q:`Business Transformations`,
+                a:`
+<div>
+<p><span style="color:#1565C0;"><b>Q: What business transformations happen in Gold?</b></span><br>
+Claims are enriched with Patient and Provider dimensions, and reference datasets like ICD-10, CPT, Fee Schedule, and Provider Roster.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why aren't these transformations done in Silver?</b></span><br>
+Silver provides clean enterprise data, while Gold applies business-specific modeling for analytics.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why do you enrich claims?</b></span><br>
+Dimensions and reference data provide business context required for reporting.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Which tables are joined?</b></span><br>
+Fact Claims is joined with Patient and Provider dimensions and relevant reference datasets.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why use reference data?</b></span><br>
+Reference data standardizes business values and enriches reporting.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How are dimension lookups performed?</b></span><br>
+Facts join to dimensions using business keys and store the matching surrogate keys.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if a lookup fails?</b></span><br>
+The fact is loaded using the Unknown dimension record, and the issue is logged.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What derived columns do you create?</b></span><br>
+expected_reimbursement, actual_reimbursement, reimbursement_gap, ar_in_days, ar_bucket</p>
+
+<p><span style="color:#D32F2F;"><b>Q: Do you perform aggregations in Gold?</b></span><br>
+In our project, Gold primarily exposes detailed business-ready fact tables. We don't build pre-aggregated summary tables because the BI team owns dashboard-specific aggregations and KPI definitions.
+
+<p><span style="color:#1565C0;"><b>Q: Who defines KPIs?</b></span><br>
+The BI team defines KPIs using the standardized Gold datasets.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not join everything in BI?</b></span><br>
+Gold provides consistent joins and business logic, improving performance and reducing duplication.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: If ICD-10 descriptions change, do you rebuild the fact table?</b></span><br>
+No. The reference dataset is refreshed, and only affected records are reprocessed if required.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: What if reference datasets conflict?</b></span><br>
+The approved authoritative source is used according to business rules.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can Gold contain business rules?</b></span><br>
+Yes. Reusable business logic belongs in Gold, while report-specific KPIs remain in BI.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why separate business transformations from KPI calculations?</b></span><br>
+Gold builds reusable datasets, while KPI definitions are owned by the BI team.</p>
+
+</div>
+
+                `,
+                children:[],
+            },
+            {
+                q:`Performance & Optimizations`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: How did you optimize your Gold layer?</b></span><br>
+We optimized frequently queried Gold tables using OPTIMIZE, Z-ORDER, proper partitioning, and efficient join strategies.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why does Gold need more optimization than Silver?</b></span><br>
+Gold is optimized for analytical reads, while Silver is optimized for ETL processing.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Which tables did you optimize?</b></span><br>
+Primarily the frequently queried Gold fact tables, with dimensions optimized only when beneficial.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Did you partition Gold tables?</b></span><br>
+Yes. Large fact tables were partitioned on appropriate low-cardinality business columns.</p>
+
+<p><span style="color:#D32F2F;"><b>Q: Why not partition every column?</b></span><br>
+High-cardinality partitions create many small files and hurt performance.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Which columns do you Z-ORDER?</b></span><br>
+Frequently filtered columns such as Claim ID, Patient ID, Provider ID, or service date based on query patterns.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not Z-ORDER every column?</b></span><br>
+It increases maintenance cost with little additional benefit.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why is file compaction important?</b></span><br>
+It reduces metadata overhead and improves query performance.</p>
+
+<p><span style="color:#D32F2F;"><b>Q: Why not run OPTIMIZE/Z-ORDER after every load?</b></span><br>
+OPTIMIZE is compute-intensive, so we run it periodically as scheduled maintenance.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Did you cache Gold tables?</b></span><br>
+Yes. We cached only repeatedly reused datasets during pipeline execution.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not cache everything?</b></span><br>
+Caching consumes memory and benefits only repeatedly accessed datasets.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How did you optimize joins?</b></span><br>
+We used broadcast joins for small dimensions and reference tables where appropriate.</p>
+
+<p><span style="color:#1565C0;"><b>Q: When do you use Broadcast Join?</b></span><br>
+When the smaller table comfortably fits in executor memory.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why not broadcast every dimension?</b></span><br>
+Large broadcast tables increase memory usage and may reduce performance.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What causes shuffle?</b></span><br>
+Joins, aggregations, and repartitioning move data across executors.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you reduce shuffle?</b></span><br>
+By using broadcast joins, efficient partitioning, and avoiding unnecessary repartitioning.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How did you achieve the 40–45% performance improvement?</b></span><br>
+Through partition pruning, OPTIMIZE, Z-ORDER, selective caching, and optimized join strategies.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not partition by Patient ID?</b></span><br>
+High-cardinality partitioning creates excessive small files.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can excessive partitioning reduce performance?</b></span><br>
+Yes. It creates excessive metadata and many small files.</p>
+
+<p><span style="color:#D32F2F;"><b>How often optimize?</b></span><br>
+We scheduled OPTIMIZE periodically based on table growth and query performance. In our environment, a roughly biweekly schedule provided a good balance between query performance and compute cost.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why schedule OPTIMIZE separately?</b></span><br>
+It keeps ingestion predictable and performs maintenance during low-usage periods.</p>
+
+</div>
+
+                `,
+                children:[],
+            },
+            {
+                q:`Data Quality`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: What data quality checks do you perform in Gold?</b></span><br>
+Gold validates referential integrity, dimension lookups, SCD consistency, duplicate prevention</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you validate referential integrity?</b></span><br>
+Every fact foreign key must reference a valid dimension surrogate key or the predefined Unknown dimension.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you validate fact records?</b></span><br>
+Mandatory business keys, successful dimension lookups, numeric measures, and duplicate business events are validated.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you validate dimensions?</b></span><br>
+We ensure one active SCD2 record per business key and validate Effective Date, Expiry Date, and Current Flag consistency.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you prevent duplicate facts?</b></span><br>
+Incremental MERGE uses the business key to prevent duplicate claim records.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you prevent duplicate SCD2 versions?</b></span><br>
+New versions are created only when tracked business attributes change.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What business validations do you perform?</b></span><br>
+We validate patient/provider references, required measures, and SCD history consistency.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you monitor data quality?</b></span><br>
+Pipeline logs, audit metrics, and validation failures are monitored.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: If Silver is clean, why can Gold still fail?</b></span><br>
+Business-level validations such as dimension lookups and SCD processing occur only in Gold.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: What audit columns do you maintain in Gold?</b></span><br>
+We maintain load timestamp and pipeline execution metadata for lineage and troubleshooting.</p>
+
+</div>
+
+                `,
+                children:[],
+            },
+            {
+                q:`Failure Handling`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: How do you monitor your Gold pipelines?</b></span><br>
+Gold pipelines are orchestrated using Databricks Workflows, where job status, logs, and failures are monitored.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What happens if a Gold pipeline fails?</b></span><br>
+The failure is investigated using workflow logs, the issue is fixed, and the incremental job is rerun.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if a dimension load fails before the fact load?</b></span><br>
+Fact loading does not begin because dimensions must complete successfully first.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if the fact load fails after dimensions complete?</b></span><br>
+Since dimensions and facts are separate workflow tasks, successfully completed dimensions are not reprocessed. After resolving the issue, we rerun only the failed fact task, which safely resumes because the fact load uses idempotent MERGE operations</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you investigate failures?</b></span><br>
+We review Databricks Workflow logs, Spark logs, pipeline metrics, and audit metadata.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What audit information do you maintain?</b></span><br>
+We maintain load timestamp and pipeline execution metadata for lineage and troubleshooting.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How does Delta Time Travel help?</b></span><br>
+It allows us to inspect previous table versions for investigation and validation.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Do you use Time Travel for recovery?</b></span><br>
+Primarily for investigation and validation. Restoration is performed only when required.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What happens if only part of the pipeline succeeds?</b></span><br>
+Only incomplete stages are rerun, while successful stages are retained.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you avoid duplicate data after recovery?</b></span><br>
+MERGE uses deterministic business keys to prevent duplicate records.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not truncate the table before rerunning?</b></span><br>
+Incremental recovery is faster, safer, and avoids unnecessary processing.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Can Time Travel replace backups?</b></span><br>
+No. Time Travel supports short-term investigation and recovery, not long-term backup.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: How long can you use Time Travel?</b></span><br>
+It is available only within the configured Delta retention period.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: What if OPTIMIZE was run before the failure?</b></span><br>
+OPTIMIZE changes file layout but not logical data, so reruns are unaffected.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why keep audit columns?</b></span><br>
+Audit metadata supports troubleshooting, lineage, reconciliation, and pipeline traceability.</p>
+
+</div>
+
+                `,
+                children:[],
+            },
+            {
+                q:`Production Design Decisions`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: Why does Gold use the latest state from Silver?</b></span><br>
+Silver maintains the latest trusted enterprise data, allowing Gold to focus on business modeling.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why is SCD Type 2 implemented in Gold instead of Silver?</b></span><br>
+SCD2 is an analytical requirement, so history is maintained only in Gold while Silver remains the clean integration layer.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why are surrogate keys generated only in Gold?</b></span><br>
+"In our project, surrogate keys are generated in Gold because that's where we implement SCD Type 2 dimensions. Some organizations generate surrogate keys earlier, but our architecture keeps Silver focused on clean, current-state enterprise data and Gold focused on business modeling..</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why is Gold optimized differently from Silver?</b></span><br>
+Silver is optimized for ETL, while Gold is optimized for analytical queries.</p>
+
+<p><span style="color:#1565C0;"><b>Q: Why use a Star Schema?</b></span><br>
+It reduces joins and improves reporting performance.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not keep only facts?</b></span><br>
+Dimensions describe entities and facts store measurable business events.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Why not keep every historical version everywhere?</b></span><br>
+Keeping history only where it provides business value reduces complexity and improves maintainability.</p>
+
+</div>
+                
+                `,
+                children:[],
+            },
+            {
+                q:`Advanced Interview Scenarios`,
+                a:`
+<div>
+
+<p><span style="color:#1565C0;"><b>Q: What is a late-arriving fact?</b></span><br>
+A late-arriving fact is a business event that reaches the data platform after its actual business date.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you handle late-arriving facts?</b></span><br>
+The fact is processed during the next incremental load and linked to the appropriate dimension version using the business effective date.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is a late-arriving dimension?</b></span><br>
+A dimension record arrives after related facts have already been processed.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you handle late-arriving dimensions?</b></span><br>
+Facts initially reference the Unknown dimension. After the dimension arrives, affected facts are reprocessed to resolve the correct surrogate key.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if a provider record is corrected after several months?</b></span><br>
+A new SCD2 version is created. Historical facts continue referencing the original version, while future facts use the new version.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if historical business data is corrected?</b></span><br>
+Only the affected historical records are backfilled instead of rebuilding the full Gold layer.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How do you handle dimension reprocessing?</b></span><br>
+Only impacted dimensions and affected facts are reprocessed.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What if a reference dataset changes?</b></span><br>
+The updated reference data is loaded, and affected Gold records are selectively reprocessed if required.</p>
+
+<p><span style="color:#1565C0;"><b>Q: How does your pipeline scale?</b></span><br>
+Incremental processing, optimized Delta tables, partition pruning, broadcast joins, and scheduled maintenance support scalability.</p>
+
+<p><span style="color:#1565C0;"><b>Q: What is the biggest production challenge in Gold?</b></span><br>
+Maintaining historical accuracy while keeping incremental processing efficient and reliable.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: A patient record arrives after the claim. What happens?</b></span><br>
+The claim initially references the Unknown Patient dimension and is later updated with the correct surrogate key.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Should historical claims change when a provider changes specialty?</b></span><br>
+No. Historical claims continue referencing the older provider dimension version.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: Gold row count is lower than Silver. What do you check first?</b></span><br>
+I check reconciliation results, MERGE logic, business validations, and dimension lookups before investigating source data.</p>
+
+<p><span style="color:#D32F2F;"><b>Interview Trap: BI reports incorrect numbers. Where do you start?</b></span><br>
+I validate Gold against Silver, review recent pipeline runs, and determine whether the issue is in the data platform or the BI layer.</p>
+
+</div>
+
+                `,
+                children:[],
+            }, 
             {
                 q: `did you work with stakeholders on KPI definitions? `,
                 a: `<ul><li>I wasn't directly involved in defining the KPIs with business stakeholders. Those business rules  were typically finalized by the product owner, business analysts, and reporting teams</li><li>I attended requirement clarification and sprint discussions where business requirements and schema changes were discussed </li> <li> My responsibility was understanding those requirements, implementing the data transformations, and ensuring the Gold tables accurately supported those reporting needs.</li></ul>`,
