@@ -1,4 +1,4 @@
-const cats = ["All", "Project", "Bronze", , "SIlver", "Gold", "Orchestration", "Mindset & growth"];
+const cats = ["All", "Project", "Bronze", , "Silver", "Gold", "Orchestration", "Mindset & growth"];
 const qs = [
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
     {
@@ -20,123 +20,113 @@ const qs = [
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     {
         cat: "Story & fit",
-        q: "Tell me about yourself.",
-        answer: `Hi, I'm Prathap. I'm currently working as an Azure Data Engineer at TCS with around 3 years of experience. I primarily work on a US healthcare project, building scalable batch ETL pipelines using Azure Databricks, PySpark, Python, and SQL. I hold both the Databricks Certified Data Engineer Associate and Professional certifications, and coming to academics,  I have completed my graduaction in Electronics and Communication Engineering from VR Siddhartha Engineering College, Vijayawada.`,
+        q: "Starting",
+        answer: ``,
+        tip: `end-end data pipe line = end-end data framework `,
         children: [
             {
-                q: "Why ECE to Data Engineering?",
-                a: "Although I studied ECE, I developed a strong interest in software during my college and started learning Python and SQL. That interest turned into hands-on experience in my current role with Databricks and PySpark, so I chose to build my career in data engineering",
-                children: []
-            },
-        ]
-    },
-
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
-    {
-        cat: "Story & fit",
-        q: "Why are you looking for a new role right now? / leaving TCS",
-        answer: `TCS has given me a strong foundation in building production-grade data pipelines on Azure Databricks and working with large-scale healthcare data.<br> I'm now looking for an opportunity where I can take on broader responsibilities, work on more complex data engineering problems, and contribute to the design and development of scalable data platforms. `
-        ,
-        children: [
-            {
-                q: "what optimizations",
-                a: "👉 In our pipelines, I mainly worked on reducing job runtime . For example, one of our joins between large claim tables was causing heavy shuffle. I optimized it using broadcast join for smaller dimension tables and repartitioned data based on join keys. This reduced runtime by around 30–40%.",
+                q: `tell me about yourself`,
+                a: ` Hi, I'm Prathap. I'm currently working as an Azure Data Engineer at TCS with around 3 years of experience. I primarily work on a US healthcare project, building scalable batch ETL pipelines using Azure Databricks, PySpark, Python, and SQL. 
+                <br>I hold both the Databricks Certified Data Engineer Associate and Professional certifications, and coming to academics,  I have completed my graduaction in Electronics and Communication Engineering from VR Siddhartha Engineering College, Vijayawada.`,
                 children: [
                     {
-                        q: `how you identifiedbottle necks`,
-                        a: `“I identified the bottleneck using Spark UI — stages with high shuffle read and skewed tasks."`,
+                        q: "Why ECE to Data Engineering?",
+                        a: "Although I studied ECE, I developed a strong interest in software during my college and started learning Python and SQL. That interest turned into hands-on experience in my current role with Databricks and PySpark, so I chose to build my career in data engineering",
                         children: []
                     },
                 ],
             },
             {
-                q: `what design decisions are you ref to`,
-                a: `👉“Primarily around structuring pipelines — deciding how to split transformations across bronze, silver, and gold, choosing incremental vs full loads, and partitioning strategies for large tables.”
+                q: `why are you looking for new role/ change company`,
+                a: ` TCS has given me a strong foundation in building production-grade data pipelines on Azure Databricks and working with large-scale healthcare data.
+                <br> I'm now looking for an opportunity where I can take on broader responsibilities, work on more complex data engineering problems, and contribute to the design and development of scalable data platforms. `,
+                children: [
+                    {
+                        q: "what optimizations",
+                        a: "👉 In our pipelines, I mainly worked on reducing job runtime . For example, one of our joins between large claim tables was causing heavy shuffle. I optimized it using broadcast join for smaller dimension tables and repartitioned data based on join keys. This reduced runtime by around 30–40%.",
+                        children: [
+                            {
+                                q: `how you identifiedbottle necks`,
+                                a: `“I identified the bottleneck using Spark UI — stages with high shuffle read and skewed tasks."`,
+                                children: []
+                            },
+                        ],
+                    },
+                    {
+                        q: `what design decisions are you ref to`,
+                        a: `👉“Primarily around structuring pipelines — deciding how to split transformations across bronze, silver, and gold, choosing incremental vs full loads, and partitioning strategies for large tables.”
             👉 If pushed:“For example, for frequently updated healthcare claims data, we used incremental loads with merge instead of full refresh to reduce processing time.”`,
-                children: [],
+                        children: [],
+                    },
+                    {
+                        q: `what makes systems scabale`,
+                        a: `Scalability depends on handling increasing data without performance degradation. In our case, we ensured scalability using partitioning on high-cardinality columns, incremental processing instead of full loads, and avoiding data skew during joins.`,
+                        children: [],
+                    },
+                    {
+                        q: `How do you ensure data quality?`,
+                        a: `In silver layer, we apply checks like removing duplicates, handling null values, and validating schema. We also compare record counts between source and target. For critical tables, we added validation queries to ensure consistency before loading into gold.`,
+                        children: [],
+                    },
+                    {
+                        q: `Handling large data volumes?`,
+                        a: `For large datasets, we use partitioning and avoid small file issues by optimizing file sizes. We also use Delta format for efficient reads and writes. During joins, we handle skew using repartitioning or broadcast where applicable`,
+                        children: [],
+                    },
+                    {
+                        q: `how do you handle failures`,
+                        a: `“We use retry mechanisms in our job orchestration. Also, since we use incremental loads with merge, pipelines are idempotent — rerunning doesn’t create duplicates. We also log failures and track them for debugging.”`,
+                        children: [],
+                    },
+                    {
+                        q: `How do you optimize cost in Databricks?`,
+                        a: `We optimized cost by using job clusters instead of all-purpose clusters, enabling auto-scaling, and avoiding unnecessary full data processing. Also, by optimizing queries and reducing shuffle, we reduced compute usage.`,
+                        children: [],
+                    },
+                ]
             },
             {
-                q: `what makes systems scabale`,
-                a: `Scalability depends on handling increasing data without performance degradation. In our case, we ensured scalability using partitioning on high-cardinality columns, incremental processing instead of full loads, and avoiding data skew during joins.`,
-                children: [],
-            },
-            {
-                q: `How do you ensure data quality?`,
-                a: `In silver layer, we apply checks like removing duplicates, handling null values, and validating schema. We also compare record counts between source and target. For critical tables, we added validation queries to ensure consistency before loading into gold.`,
-                children: [],
-            },
-            {
-                q: `Handling large data volumes?`,
-                a: `For large datasets, we use partitioning and avoid small file issues by optimizing file sizes. We also use Delta format for efficient reads and writes. During joins, we handle skew using repartitioning or broadcast where applicable`,
-                children: [],
-            },
-            {
-                q: `how do you handle failures`,
-                a: `“We use retry mechanisms in our job orchestration. Also, since we use incremental loads with merge, pipelines are idempotent — rerunning doesn’t create duplicates. We also log failures and track them for debugging.”`,
-                children: [],
-            },
-            {
-                q: `How do you optimize cost in Databricks?`,
-                a: `We optimized cost by using job clusters instead of all-purpose clusters, enabling auto-scaling, and avoiding unnecessary full data processing. Also, by optimizing queries and reducing shuffle, we reduced compute usage.`,
-                children: [],
-            },
-            {
-                q: `How do you ensure data quality?`,
-                a: `yes`,
-                children: [],
-            }
-        ]
-
-    },
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
-    {
-        cat: "Project",
-        q: `have you ever worked on any end-end data Frame work ?`,
-        answer: `"Yes, I've worked on an end-to-end data pipeline built on Azure Databricks. We follow Medallion architecture — starting from raw ingestion in Bronze, transformation and deduplication in Silver, and business-ready aggregations in Gold. The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB of healthcare data daily. From source to BI consumption — that's our end-to-end framework." `,
-        tip: `end-end data pipe line = end-end data framework `,
-        children: [{
-            q: `"Can you tell me more about the domains of the projects that you have worked with?"`,
-            a: `I have primarily worked in the Healthcare domain for a US-based client. The project deals with clinical and financial data.
+                q: `have you ever worked on any end-end data Frame work ?`,
+                a: `"Yes, I've worked on an end-to-end data pipeline built on Azure Databricks. We follow Medallion architecture — starting from raw ingestion in Bronze, transformation and deduplication in Silver, and business-ready aggregations in Gold. The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB of healthcare data daily. From source to BI consumption — that's our end-to-end framework." `,
+                children: [{
+                    q: `"Can you tell me more about the domains of the projects that you have worked with?"`,
+                    a: `I have primarily worked in the Healthcare domain for a US-based client. The project deals with clinical and financial data.
 . We receive data from multiple Source systems systems containing member information, provider details, claim transactions, diagnosis codes, and payment information.
 
 My role is to build and maintain Databricks-based ETL pipelines that ingest data from PostgreSQL and file-based sources, transform it, and make it available for downstream reporting, analytics, and data science teams.<br>
 https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use this for healthcare notes`,
-            children: [
-                {
-                    q: `"You said healthcare claims. What are the top 5 datasets you process?"`,
-                    a: `The major datasets include member information, provider information, claim transaction data, visits , diagnosos and procedures etc,.`,
-                    children: [],
-                },
-                {
-                    q: `How HIpaa is followed`,
-                    a: `HIPAA compliance in our project is handled at multiple levels.
+                    children: [
+                        {
+                            q: `"You said healthcare claims. What are the top 5 datasets you process?"`,
+                            a: `The major datasets include member information, provider information, claim transaction data, visits , diagnosos and procedures etc,.`,
+                            children: [],
+                        },
+                        {
+                            q: `How HIpaa is followed`,
+                            a: `HIPAA compliance in our project is handled at multiple levels.
   <ul>
   <li>In our project, sensitive fields like SSN and home address are handled at the source level itself — data comes from the client's PostgreSQL system already tokenized  before landing in our pipeline.</li>
   <li>Business identifiers like MemberID, ClaimID, ProviderID, NDC codes are accessible as they're needed for ETL and joins — these are not considered hard PII under HIPAA.  Raw PII visibility is restricted to the client's compliance team — we don't interact with it at any layer of our Medallion pipeline.</li>
   <li>At the pipeline level, no PII fields are logged or printed in notebook outputs or job logs.</li>
   <li>Access is controlled through Azure AD groups synced into Databricks via SCIM — we follow the least privilege principle, each group gets exactly what their job needs.</li>
   <ul>`,
-                    children: [],
+                            children: [],
 
-                },
-            ],
-        },],
-    },
-    //////////////////////////////////
-    {
-        cat: `Data sources`,
-        q: `What data sources have you worked with?`,
-        answer: `💠In my current healthcare project at TCS, I've primarily worked with relational databases and file-based sources. Our main source is a PostgreSQL database that stores operational healthcare data, and we also receive CSV and Excel files from external partners. These files are landed into ADLS Gen2 before processing.
+                        },
+                    ],
+                },],
+            },
+            {
+                q: `What data sources have you worked with?`,
+                a: `💠In my current healthcare project at TCS, I've primarily worked with relational databases and file-based sources. Our main source is a PostgreSQL database that stores operational healthcare data, and we also receive CSV and Excel files from external partners. These files are landed into ADLS Gen2 before processing.
 
 <br> 💠 My responsibility was to build ingestion pipelines that could handle both database and file-based inputs efficiently. For database tables, we use incremental extraction based on a watermark maintained in a metadata table, while for files we perform schema validation before loading them into the Bronze layer.
 
 <br> 💠 This approach helps us process around 45–50 GB of data daily while minimizing redundant data movement, and it integrates seamlessly with our Medallion architecture.`,
-        tip: `in general 2 Categories:<br> File-based Sources: Parquet , csv , excel.<br> Structured relational sources — databases like PostgreSQL, SQL Server, Oracle `,
-        children: [],
+                children: [],
+            }
 
+        ]
     },
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
 
@@ -223,162 +213,22 @@ No. SHIR is typically used with Azure Data Factory for on-prem connectivity, whe
 			👉If migrated now : At current scale, a traditional system could work but slow due to scd2+ complex joins, but Databricks gives us better flexibility and future 				scalability. `,
                         children: [],
                     },
-                    {
-                        q: `On premis sql - How pulling - What’s the failure handling mechanism?`,
-                        a: ` <li> We ingest data from on-prem PostgreSQL using JDBC-based Spark reads via Databricks.</li>
-				<li>We use partitioned JDBC reads (based on numeric columns like ID) to parallelize extraction and improve performance.If not used  everything 					through a single executor. </li>
-				<li>We have retry logic (3 attempts) for transient failures like network issues.
-				</li> <li>The pipelines are orchestrated via Databricks Workflows.</li> 
-					<pre><code class="language-python">url = "jdbc:postgresql://host:port/db"
-properties = {
-    "user": "username",
-    "password": "password",
-    "driver": "org.postgresql.Driver"
-}
-query = "(SELECT * FROM schema.table WHERE updated_at > '2025-01-01') as t"
-retries = 3
-for i in range(retries):
-    try:
-        df = spark.read.jdbc(
-            url=url,
-            table=query,
-            properties=properties
-        ).option("partitionColumn", "id")
-         .option("lowerBound", "1")
-         .option("upperBound", "100000")
-         .option("numPartitions", "8")
-         .load()
- 
-        break
-    except Exception as e:
-        if i == retries - 1:
-            raise e</code></pre>`,
-                        children: [],
-                    },
-
                 ],
             },
-
-            //new
-            {
-                q: `Silver Layer`,
-                a: ``,
-                children: [
-                    {
-                        q: `How do you handle schema changes from source?`,
-                        a: `Delta format gives us schema enforcement at write time, so unexpected schema changes fail loudly rather than silently corrupting Silver. We handle schema evolution explicitly when needed using mergeSchema.`, children: [],
-                    },
-                ]
-            },
-            ///new
-            {
-                q: `Gold Layer`,
-                a: ``,
-                children: [{
-                    q: `why upsert fact tables before aggregating?`,
-                    a: `Aggregating before upsert risks including stale or duplicate records in the summary. We upsert first so the fact table is in its correct final state, then aggregate — ensuring summary tables always reflect accurate numbers`, children: [],
-                },
-                {
-                    q: `How does your SCD Type 2 MERGE work?`,
-                    a: `We implemented SCD Type 2 in the Gold layer using Delta Lake MERGE on business key and active flag. If a match is found and tracked columns change, we expire the existing record by setting is_active = false and updating end_date. New records are inserted directly. <br>
-For changed records, we insert a new active version in a second step by identifying records closed in the current run, ensuring full history with continuous business key.<br>
-
-
-<pre><code class="language-sql">
--- ------------------------------------------------------------------
--- Step 1 — Create incoming view with temp staging
--- ------------------------------------------------------------------
--- ------------------------------------------------------------------
--- Step 2 — MERGE to close changed records
--- ------------------------------------------------------------------
-
-MERGE INTO gold.dim_patient AS tgt
-USING incoming AS src
-ON tgt.patient_id = src.patient_id -- Business Keys
-AND tgt.is_active = true
-
--- Match found + at least one tracked column changed → close it
-WHEN MATCHED AND (
-    tgt.name           <> src.name           OR
-    tgt.dob            <> src.dob            OR ........
-)
-THEN UPDATE SET
-    tgt.is_active  = false,
-    tgt.end_date   = current_date(),
-    tgt.updated_at = current_timestamp()
-
--- No match → brand new record, straight insert
-WHEN NOT MATCHED THEN INSERT (
-    patient_id,
-    name,
-    start_date,
-    end_date,
-    is_active,
-    updated_at
-)
-VALUES (
-    src.patient_id,
-    src.name,
-    current_date(),
-    NULL,
-    true,
-    current_timestamp()
-);
--- ------------------------------------------------------------------
--- Step 3 — Insert new version for records that were just closed
--- ------------------------------------------------------------------
-
-INSERT INTO gold.dim_patient (
-    patient_id,
-    start_date,
-    end_date,
-    is_active,
-    updated_at
-)
-SELECT
-    src.patient_id,
-    current_date()      AS start_date,
-    NULL                AS end_date,
-    true                AS is_active,
-    current_timestamp() AS updated_at
-FROM incoming src
-INNER JOIN gold.dim_patient tgt
-    ON  tgt.patient_id = src.patient_id
-    AND tgt.is_active  = false
-    AND tgt.end_date   = current_date();  -- only rows closed in THIS run
-
-
-</code></pre>`
-
-
-                    , children: [],
-                },
-                { q: `why views only for BI`, a: `Views give us a decoupling layer between the Gold tables and BI consumers. If we restructure or rename anything in the underlying table, we just update the view — BI reports stay untouched and nothing breaks downstream`, children: [] },
-                { q: `what if the MERGE partially fails for fcts? Are your summary tables now inconsistent with facts`, a: `in case of a MERGE failure the aggregation part is skipped  — the agg task only triggers on success of the MERGE task. So summary tables retain yesterday's data intentionally, not silently. We'd also fire an alert so the BI team knows the data is T-1. Stale but consistent is better than partial aggregations on top of a half-written fact table.`, children: [] },
-                ]
-
-            },
             ///new
 
-            {
-                q: `🔥 Architecture & Reality Check`,
-                a: ``,
-                children: [
-                    {
-                        q: `why not ADF only dbx`, a: `Our sources — PostgreSQL via JDBC and CSV/Excel from ADLS — are natively handled in PySpark, so ADF added no value. Databricks Workflows already handles our orchestration, so bringing in ADF would've just split observability across two tools for zero gain`, children: []
-                    }
-                    ,
-                ]
-            }
         ],
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
     {
-        cat: "Architecture",
+        cat: "Orchestration",
         q: "Arcitecture - Orchestration",
         answer: ``,
         children: [
+            {
+                q: `why not ADF only dbx`, a: `Our sources — PostgreSQL via JDBC and CSV/Excel from ADLS — are natively handled in PySpark, so ADF added no value. Databricks Workflows already handles our orchestration, so bringing in ADF would've just split observability across two tools for zero gain`, children: []
+            },
             {
                 q: `why 4 hours cadence?`,
                 a: `The cadence was decided based on business requirements and source data availability. <br> 💠 Since new operational data was generated throughout the day, a daily refresh would introduce unnecessary delay. <br> 💠 A 4-hour schedule provided multiple intraday updates while keeping compute costs and pipeline overhead reasonable.`,
@@ -425,9 +275,32 @@ INNER JOIN gold.dim_patient tgt
                         , children: [],
                     },],
             },
+            {
+                q: `why views only for BI`,
+                a: `Views give us a decoupling layer between the Gold tables and BI consumers. If we restructure or rename anything in the underlying table, we just update the view — BI reports stay untouched and nothing breaks downstream`,
+                children: []
+            },
+
         ],
     },
     ///////////PostgreSQL
+    {
+        cat: `Bronze`,
+        q: `Bronze-Overview`,
+        ans: ``,
+        children: [
+            {
+                q: `Did you use explicit cols / * whle reading postgres data`,
+                a: `We read the incremental data(*), validate that the expected columns are present(given via widgets), select only those columns and Fail/succeed with warning like files, and store the raw data in Parquet. Datatype standardization and business transformations are intentionally deferred to the Silver layer.`,
+                children: [],
+            },
+            {
+                q: `Bronze schema checks for Files`,
+                a: `Bronze focuses on raw ingestion and schema validation. Read File => It verifies that the incoming data matches the expected structure(cols) =>Add audit cols => Parquet.<br> Req cols ✅ ; if extra=>log and alert ✅ ; missing/rename -Fail Task and alert ❌ <br> Silver then performs data cleansing, including null handling, datatype standardization, deduplication, and business validations before MERGEing into cumulative Delta tables.`,
+                children: [],
+            },
+        ],
+    },
     {
         cat: `Bronze`,
         q: `PostgreSQL`,
@@ -874,16 +747,17 @@ Parquet is only a file format. Delta adds a transaction log that enables ACID tr
                     },],
             },
             {
-                q: `duplicte file , corrupt file , schema changes , bad records`,
+                q: `duplicte file , corrupt file , schema changes`,
                 a: `<ul><li>Duplicate files by vendor; The control table tracks processed files, so previously processed files are ignored.</li>
-                    <li>Bad records → The file and schema are valid, but some rows fail data quality or business validations (e.g., NULL claim_id, invalid date, non-numeric paid_amount, negative reimbursement). 
-                    => Records failing data quality validations are quarantined, while the remaining valid records continue through the pipeline.</li>
                     <li>Empty file → Header-only file → process successfully with 0 rows; 0-byte file → treat as invalid and alert.</li>
-                    <li>Corrupt file → Spark cannot read or parse the file (e.g., broken delimiters, unclosed quotes, truncated/partial file).</li>
-                    <li>Schema change → The file is readable, but its structure doesn't match the expected schema (e.g., missing mandatory columns, extra columns, renamed columns, changed data types).</li>
-                    <li>In above 2 cases => we fail the ingestion, log the error in the control table, and generate an alert for the operations team. They will process when we receive correct file from vendor</li>`,
+                    <li>Corrupt file → Spark cannot read or parse the file (e.g., broken delimiters, unclosed quotes, truncated/partial file)=> we fail the ingestion, log the error in the control table.</li>
+                    <li>MISSING/RENAME REQ COLS -> The pipeline fails schema validation, logs the error, generates an alert, and waits for a corrected file or approved schema update.
+</li><li>if new col: If all expected columns are present, we ignore the additional column, log a schema warning, and notify the team for review without interrupting the pipeline.
+</li></ul>
+                    `,
                 children: [],
             },
+
             {
                 q: `what if some failed, skipped ,1 processed`,
                 a: `Even if all three CSV sources fail, we don't fail the entire Bronze CSV job. Each source records its own status in the control table—such as FAILED or SKIPPED_FILE_NOT_FOUND—and downstream Silver and Gold pipelines skip processing for those sources based on the control table. <br> Because the job completed its intended work—checking every configured source, recording each source's status, and updating the control table. Individual source failures are handled separately and don't represent a failure of the orchestration itself.,`,
@@ -919,13 +793,13 @@ Parquet is only a file format. Delta adds a transaction log that enables ACID tr
     },
     //////////////////////////////////////////////////////////////Silver
     {
-        cat: " Architecture",
+        cat: "Silver",
         q: "Arcitecture - Silver",
         answer: ``,
         children: [
             {
-                q:`Purpose and Storage`,
-                a:`
+                q: `Purpose and Storage`,
+                a: `
                 <p><span style="color:#1565C0;"><b>Q1. What is the purpose of the Silver layer?</b></span></p>
 <p>The Silver layer transforms raw Bronze data into clean, standardized, and trusted datasets by applying data quality validations, deduplication, datatype standardization, and business-level cleansing before making it available for downstream processing.</p>
 
@@ -970,11 +844,11 @@ Parquet is only a file format. Delta adds a transaction log that enables ACID tr
 <p>It provides reliable transactions, scalable incremental processing, schema management, and better operational stability than plain Parquet.</p>
 `,
 
-             children:[],
+                children: [],
             },
             {
-                q:`DQ, cleansing & Schema`,
-                a:`
+                q: `DQ, cleansing & Schema`,
+                a: `
 <p><span style="color:#1565C0;"><b>Q2. Why are data quality validations performed in Silver instead of Bronze?</b></span></p>
 <p>Bronze preserves raw source data for audit and replay. Silver is the first layer where data is cleaned and standardized for downstream consumption.</p>
 
@@ -999,6 +873,10 @@ Parquet is only a file format. Delta adds a transaction log that enables ACID tr
 <p><span style="color:#1565C0;"><b>Q10. Why remove duplicates before MERGE?</b></span></p>
 <p>MERGE expects a single source record for each business key. Removing duplicates prevents conflicts and ensures deterministic updates.</p>
 ###
+<p><span style="color:#1565C0;"><b>Q1. How do you handle schema changes from source?</b></span></p>
+<p> We enforcement schema  at write time, so unexpected schema changes fail  rather than silently corrupting Silver. We can handle schema evolution explicitly when needed using mergeSchema
+</p>
+
 <p><span style="color:#1565C0;"><b>Q1. What is schema enforcement?</b></span></p>
 <p>Schema enforcement ensures incoming data matches the expected table schema. Records with incompatible data types or invalid columns are rejected, maintaining data consistency.</p>
 
@@ -1011,12 +889,6 @@ Parquet is only a file format. Delta adds a transaction log that enables ACID tr
 
 <p><span style="color:#1565C0;"><b>Q3. Do you use schema evolution?</b></span></p>
 <p> No. We don't enable automatic schema evolution for production healthcare data. Any schema change is reviewed, implemented through a controlled code release, and then reprocessed.
-</p>
-
-<p><span style="color:#1565C0;"><b>Q5. what if new col added / missing req cols / renamed req col</b></span></p>
-<p>
-MISSING/RENAME REQ COLS: The pipeline fails schema validation, logs the error, generates an alert, and waits for a corrected file or approved schema update.<br>
-if new col: If all expected columns are present, we ignore the additional column, log a schema warning, and notify the team for review without interrupting the pipeline.
 </p>
 
 <p><span style="color:#1565C0;"><b>Q7. What happens if the datatype changes from INT to STRING?</b></span></p>
@@ -1035,11 +907,11 @@ Automatic schema evolution can silently introduce unexpected columns or structur
 
 
 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Idempotency , failure,retry`,
-                a:`
+                q: `Idempotency , failure,retry`,
+                a: `
                 <p><span style="color:#1565C0;"><b>Q1. What is idempotency?</b></span></p>
 <p>Idempotency means running the same pipeline multiple times with the same input produces the same final result without creating duplicate or inconsistent records.</p>
 
@@ -1074,11 +946,11 @@ Automatic schema evolution can silently introduce unexpected columns or structur
 <p><span style="color:#D32F2F;"><b>Interview Trap: Can users still read the Silver table while a MERGE is running?</b></span></p>
 <p>Yes. Delta's snapshot isolation allows readers to access the last committed version until the current transaction completes.</p>
 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Optimizations`,
-                a:`
+                q: `Optimizations`,
+                a: `
 
 <p><span style="color:#1565C0;"><b>Q2. Why is performance optimization important in Silver?</b></span></p>
 <p>Silver processes cleaned operational data consumed by multiple downstream pipelines, so faster execution reduces overall pipeline latency and compute cost.</p>
@@ -1129,12 +1001,12 @@ Automatic schema evolution can silently introduce unexpected columns or structur
 <p>Yes. Time Travel was used mainly for debugging, data validation, and recovering previous table versions when needed.</p>
 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Edge cases, Production &Traps , real time , Backfills
+                q: `Edge cases, Production &Traps , real time , Backfills
                 `,
-                a:`
+                a: `
 
 --<p><span style="color:#1565C0;"><b>Q3. What if the source sends a delete?</b></span></p>
 <p>In our project, source deletes are not received. If they were introduced in the future, the MERGE logic could be extended to delete or soft-delete the corresponding Silver record based on business requirements.</p>
@@ -1188,11 +1060,11 @@ else:
 </code>
 </p>
 `,
-                children:[],
+                children: [],
             },
             {
-                q:`SChenario `,
-                a:`
+                q: `SChenario `,
+                a: `
                 <p><span style="color:#1565C0;"><b>Q1. Why is the Silver layer stored as cumulative tables instead of daily tables?</b></span></p>
 <p>Cumulative tables provide a single, up-to-date view of each business entity, making downstream joins and analytics simpler while avoiding unnecessary unions across daily datasets.</p>
 
@@ -1231,19 +1103,19 @@ p><span style="color:#D32F2F;"><b>Interview Trap: Why didn't you partition the S
 <p>Unnecessary caching wastes executor memory and may reduce overall Spark performance. Cache should only be used when the same DataFrame is reused multiple times.</p>
 
 `,
-                children:[],
+                children: [],
             },
         ],
     },
     //////////////////////////////////////////////////////////Gold
     {
-        cat: " Architecture",
+        cat: "Gold",
         q: "Arcitecture - Gold",
         answer: ``,
         children: [
             {
-                q:`Purpose of Gold & Incremental Processing`,
-                a:`
+                q: `Purpose of Gold & Incremental Processing`,
+                a: `
                 <div>
 <p><span style="color:#1565C0;"><b>Q: What is the purpose of the Gold layer?</b></span><br>
 Gold is our business consumption layer. It reads incremental data from the Silver layer, enriches it with SCD Type 2 dimensions and reference datasets, builds business-ready fact and dimension tables using a Star Schema, and loads them incrementally using Delta MERGE for downstream reporting and analytics.</p>
@@ -1312,11 +1184,11 @@ No. Only the changed claim is processed through incremental MERGE.</p>
 </div>
                 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Data Modeling`,
-                a:`
+                q: `Data Modeling`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: What is dimensional modeling?</b></span><br>
@@ -1383,12 +1255,83 @@ Silver focuses on clean enterprise data. Surrogate keys and SCD2 belong in Gold 
 
 </div>
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`-----SCD 2`,
-                a:`
+                q: `-----SCD 2`,
+                a: `
 <div>
+<p><span style="color:#1565C0;"><b>Q: How SCD2 works?</b></span><br>
+We implemented SCD Type 2 in the Gold layer using Delta Lake MERGE on business key and active flag. If a match is found and tracked columns change, we expire the existing record by setting is_active = false and updating end_date. New records are inserted directly. <br>
+For changed records, we insert a new active version in a second step by identifying records closed in the current run, ensuring full history with continuous business key.<br>
+
+
+<pre><code class="language-sql">
+-- ------------------------------------------------------------------
+-- Step 1 — Create incoming view with temp staging
+-- ------------------------------------------------------------------
+-- ------------------------------------------------------------------
+-- Step 2 — MERGE to close changed records
+-- ------------------------------------------------------------------
+
+MERGE INTO gold.dim_patient AS tgt
+USING incoming AS src
+ON tgt.patient_id = src.patient_id -- Business Keys
+AND tgt.is_active = true
+
+-- Match found + at least one tracked column changed → close it
+WHEN MATCHED AND (
+    tgt.name           <> src.name           OR
+    tgt.dob            <> src.dob            OR ........
+)
+THEN UPDATE SET
+    tgt.is_active  = false,
+    tgt.end_date   = current_date(),
+    tgt.updated_at = current_timestamp()
+
+-- No match → brand new record, straight insert
+WHEN NOT MATCHED THEN INSERT (
+    patient_id,
+    name,
+    start_date,
+    end_date,
+    is_active,
+    updated_at
+)
+VALUES (
+    src.patient_id,
+    src.name,
+    current_date(),
+    NULL,
+    true,
+    current_timestamp()
+);
+-- ------------------------------------------------------------------
+-- Step 3 — Insert new version for records that were just closed
+-- ------------------------------------------------------------------
+
+INSERT INTO gold.dim_patient (
+    patient_id,
+    start_date,
+    end_date,
+    is_active,
+    updated_at
+)
+SELECT
+    src.patient_id,
+    current_date()      AS start_date,
+    NULL                AS end_date,
+    true                AS is_active,
+    current_timestamp() AS updated_at
+FROM incoming src
+INNER JOIN gold.dim_patient tgt
+    ON  tgt.patient_id = src.patient_id
+    AND tgt.is_active  = false
+    AND tgt.end_date   = current_date();  -- only rows closed in THIS run
+
+
+</code></pre> </p>
+
 
 <p><span style="color:#1565C0;"><b>Q: What is SCD Type 2?</b></span><br>
 SCD Type 2 preserves complete history by inserting a new dimension version instead of overwriting the existing record.</p>
@@ -1472,11 +1415,11 @@ Silver stores the latest trusted data, while Gold owns historical business model
 
                 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Fact Table`,
-                a:`
+                q: `Fact Table`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: What is your Gold fact table?</b></span><br>
@@ -1560,11 +1503,11 @@ AND c.claim_date BETWEEN pr.effective_date
 </div>
 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Business Transformations`,
-                a:`
+                q: `Business Transformations`,
+                a: `
 <div>
 <p><span style="color:#1565C0;"><b>Q: What business transformations happen in Gold?</b></span><br>
 Claims are enriched with Patient and Provider dimensions, and reference datasets like ICD-10, CPT, Fee Schedule, and Provider Roster.</p>
@@ -1614,11 +1557,11 @@ Gold builds reusable datasets, while KPI definitions are owned by the BI team.</
 </div>
 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Performance & Optimizations`,
-                a:`
+                q: `Performance & Optimizations`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: How did you optimize your Gold layer?</b></span><br>
@@ -1687,11 +1630,11 @@ It keeps ingestion predictable and performs maintenance during low-usage periods
 </div>
 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Data Quality`,
-                a:`
+                q: `Data Quality`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: What data quality checks do you perform in Gold?</b></span><br>
@@ -1727,11 +1670,11 @@ We maintain load timestamp and pipeline execution metadata for lineage and troub
 </div>
 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Failure Handling`,
-                a:`
+                q: `Failure Handling`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: How do you monitor your Gold pipelines?</b></span><br>
@@ -1782,11 +1725,11 @@ Audit metadata supports troubleshooting, lineage, reconciliation, and pipeline t
 </div>
 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Production Design Decisions`,
-                a:`
+                q: `Production Design Decisions`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: Why does Gold use the latest state from Silver?</b></span><br>
@@ -1813,11 +1756,11 @@ Keeping history only where it provides business value reduces complexity and imp
 </div>
                 
                 `,
-                children:[],
+                children: [],
             },
             {
-                q:`Advanced Interview Scenarios`,
-                a:`
+                q: `Advanced Interview Scenarios`,
+                a: `
 <div>
 
 <p><span style="color:#1565C0;"><b>Q: What is a late-arriving fact?</b></span><br>
@@ -1865,8 +1808,8 @@ I validate Gold against Silver, review recent pipeline runs, and determine wheth
 </div>
 
                 `,
-                children:[],
-            }, 
+                children: [],
+            },
             {
                 q: `did you work with stakeholders on KPI definitions? `,
                 a: `<ul><li>I wasn't directly involved in defining the KPIs with business stakeholders. Those business rules  were typically finalized by the product owner, business analysts, and reporting teams</li><li>I attended requirement clarification and sprint discussions where business requirements and schema changes were discussed </li> <li> My responsibility was understanding those requirements, implementing the data transformations, and ensuring the Gold tables accurately supported those reporting needs.</li></ul>`,
