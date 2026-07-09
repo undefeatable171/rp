@@ -846,8 +846,9 @@ Parquet is only a file format. Delta adds a transaction log that enables ACID tr
 <p><span style="color:#1565C0;"><b>Q10. What happens if the job fails during MERGE?</b></span></p>
 <p>No partial updates are committed. Delta rolls back the incomplete transaction, keeping the Silver table in a consistent state.</p>
 
-<p><span style="color:#1565C0;"><b>Q11. Can multiple jobs read the table while MERGE is running?</b></span></p>
-<p>Yes. Delta uses snapshot isolation, allowing readers to continue accessing the last committed version while the MERGE is in progress.</p>
+<p><span style="color:#1565C0;"><b>Q10. Why MERGE for operational tables but full reload for reference tables?
+</b></span></p>
+<p>Operational tables change frequently, so incremental MERGE avoids unnecessary processing. Reference files are small and replaced completely by the source, so full reload is simpler.</p>
 
 <p><span style="color:#1565C0;"><b>Q12. Why is Delta a good choice for production pipelines?</b></span></p>
 <p>It provides reliable transactions, scalable incremental processing, schema management, and better operational stability than plain Parquet.</p>
