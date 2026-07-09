@@ -200,9 +200,7 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                     {
                         q: `<span style="color:#1F618D;font-weight:bold;">Are you connecting to oon-prem postgres using self hosted Ienegration Runtime(SHIR)</span><br>
 `,
-                        a: `<p>
-No. SHIR is typically used with Azure Data Factory for on-prem connectivity, whereas our ingestion was implemented directly in Databricks using JDBC over the client's secure network.
-</p>`,
+                        a: `<p>No. SHIR is typically used with Azure Data Factory for on-prem connectivity, whereas our ingestion was implemented directly in Databricks using JDBC over the client's secure network.</p>`,
                         children: [],
                     },
 
@@ -212,6 +210,17 @@ No. SHIR is typically used with Azure Data Factory for on-prem connectivity, whe
 			It’s more about future growth and flexibility than just current size.<br>
 			👉If migrated now : At current scale, a traditional system could work but slow due to scd2+ complex joins, but Databricks gives us better flexibility and future 				scalability. `,
                         children: [],
+                    },
+                    {
+                        q:`At which stage did you apply DQ checks—Bronze, Silver, or Gold? Why?`,
+                        a:`We applied DQ checks across all three layers. In Bronze, we validated file/schema and row counts to ensure successful ingestion. In Silver, we handled null checks, duplicates, data types, and business key validations to clean the data. In Gold, we validated business rules and KPI sanity before exposing data to reporting.`,
+                        children:[],
+                    },
+                    {
+                        q:`Can you give an example where a DQ check prevented bad data from going downstream?`,
+                        a:`In the Silver layer, we found claims with NULL patient_id due to an upstream issue. Our null check quarantined those records instead of processing them further, while valid records continued through the pipeline.
+                        <br> This prevented incorrect healthcare metrics and reports in the Gold layer."`,
+                        children:[],
                     },
                 ],
             },
