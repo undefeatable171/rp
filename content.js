@@ -289,6 +289,28 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                 a: `Views give us a decoupling layer between the Gold tables and BI consumers. If we restructure or rename anything in the underlying table, we just update the view — BI reports stay untouched and nothing breaks downstream`,
                 children: []
             },
+            {
+                q:`How email alerts are sent for failures/ dq checks?`,
+                a:`When an dq is failed/ new col came notebook calls an Azure Logic App (or similar notification service) via an HTTP request. The Logic App sends an email or Teams notification while the pipeline completes successfully.
+                <br>The Platform team  manages the Azure Logic App and provides its endpoint. We invoke that endpoint from our notebooks  whenever conditions such as schema changes, missing files, or data quality issues are detected, while allowing the pipeline to continue if required."
+               <pre> <code class="language-python" >
+                 expected = {"id","name","age"}
+actual = set(df.columns)
+new_cols = actual - expected
+missing_cols = expected - actual
+
+if new_columns:
+    requests.post(
+        logic_app_url,
+        json={
+            "pipeline": "Claims Pipeline",
+            "alert": "New columns detected",
+            "columns": list(new_columns)
+        }
+    )
+</code></code>`,
+                children:[],
+            },
 
         ],
     },
