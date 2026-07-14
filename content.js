@@ -213,13 +213,18 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                     },
                     {
                         q:`At which stage did you apply DQ checks—Bronze, Silver, or Gold? Why?`,
-                        a:`We applied DQ checks across all three layers. In Bronze, we validated file/schema and row counts to ensure successful ingestion. In Silver, we handled null checks, duplicates, data types, and business key validations to clean the data. In Gold, we validated business rules and KPI sanity before exposing data to reporting.`,
+                        a:`We applied DQ checks across all three layers. In Bronze, we validated file/schema and row counts to ensure successful ingestion. In Silver, we handled null checks, duplicates, data types, and business key validations to clean the data. In Gold, we validated business rules  before exposing data to reporting.`,
                         children:[],
                     },
                     {
                         q:`Can you give an example where a DQ check prevented bad data from going downstream?`,
                         a:`In the Silver layer, we found claims with NULL patient_id due to an upstream issue. Our null check quarantined those records instead of processing them further, while valid records continued through the pipeline.
                         <br> This prevented incorrect healthcare metrics and reports in the Gold layer."`,
+                        children:[],
+                    },
+                    {
+                        q:`what business rules in Gold`,
+                        a:`In the Gold layer, we perform business validations rather than technical validations. For example, we ensure every claim has valid patient and provider records, verify ICD/CPT codes against reference data, check patient eligibility on the service date, and validate that claim amounts paid  does not exceed the allowed amount as per the fee schedule brfore reporting reporting.`,
                         children:[],
                     },
                 ],
@@ -257,11 +262,6 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
             {
                 q: `What if business later needs CSV data fresher than daily — how would you handle that?`,
                 a: `We'd revisit the vendor relationship first — if they can send intraday files, we'd adjust the schedule to match. The pipeline's schedule is driven by actual source capability and business requirement, not hardcoded to a fixed assumption.`,
-                children: [],
-            },
-            {
-                q: `if you know no files in csv/excel filders. why every run?`,
-                a: `The 4-hour cadence is justified by PostgreSQL alone — that data changes continuously. For CSV and Excel, the pipeline does a lightweight file existence check on ADLS — if nothing is there, it skips in seconds. Running one unified pipeline every 4 hours is simpler to maintain and monitor than managing two separate schedules. Operational simplicity over over-engineering."`,
                 children: [],
             },
             {
