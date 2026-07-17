@@ -1863,13 +1863,18 @@ I validate Gold against Silver, review recent pipeline runs, and determine wheth
     {
         cat: " Scenario Based",
         q: `Your 40-45% optimizaton story / Biggest technical achievement so far`,
-        answer: `<li> One of the significant challenges I faced was around pipeline performance in the Gold layer. Gold layer is where all the heavy lifting happens — SCD Type 2 MERGEs on dimension tables, upserts on fact tables, and aggregations for summary tables on top of that.
-<li>Initially, the Gold layer jobs were running for 50-55 mins and sometimes taking much longer than expected. I opened the Spark UI and started analyzing the execution plans. A few things stood out.</li>
-<li><ul>
-<li>First, the MERGE operations on dimension and fact tables were doing full table scans — because without Z-ORDER, Delta had no way to skip irrelevant files when looking for matching keys. I applied Z-ORDER on the columns used in MERGE join conditions and common filter predicates, It clusters matching rows together physically, so MERGE reads far fewer files. Once that was in place, Delta's data skipping kicked in and the engine started skipping large portions of the table — MERGEs became significantly faster. </li>
-<li>Second, since we run MERGE every day, each run was writing new small Delta files into the Gold tables. Over time this meant aggregation queries were opening hundreds of small files instead of a few large ones. I ran OPTIMIZE periodically to compact those files, which reduced the file count Spark had to open during aggregation scans considerably. </li>
-<li>Third — and this is the one I found most impactful in the aggregation queries — we had multiple joins happening between the fact table and several dimension tables. Spark was doing SortMerge joins across all of them, which meant heavy shuffle stages. I went through each joining table and checked their sizes in the Spark UI. One of the reference dimension tables was around 20 MB — just above Spark's default auto-broadcast threshold of 10 MB, so it wasn't getting broadcasted automatically. I explicitly applied a broadcast hint on that table. That eliminated the shuffle stage for that join entirely — the small table was sent to every executor once and the join happened locally. The difference was immediately visible in the execution plan. </li></ul>
-<li>The combination of these three — Z-ORDER for data skipping on MERGEs, OPTIMIZE for file compaction on aggregations, and broadcast hint for the small dimension table joins — brought down the overall Gold layer runtime by 40–45% </li>
+        answer: `
+<code> Acheivement:</code> Reduced Gold layer pipeline runtime by 40–45% through Spark and Delta Lake optimizations — broadcast hints for small reference tables, OPTIMIZE for file compaction, and Z-ORDER to improve MERGE performance <hr> <br>
+<code>Contribution</code> One of my biggest contributions was optimizing long-running Gold layer jobs. <li>I diagnosed bottlenecks using Spark UI and implemented broadcast hints for small reference tables, Z-ORDER for faster MERGEs, and OPTIMIZE for file compaction — bringing runtime down by 40–45%.</li><li> That directly improved data availability for downstream analytics and reporting teams.</li> <hr> <br>
+<code>Challenges:</code> One significant challenge was Gold layer performance — it's where all the heavy lifting happens, SCD Type 2 MERGEs on dimension tables and upserts on fact tables.
+<br><hr>
+Initially, the Gold layer jobs were running for 50-55 mins and sometimes taking much longer than expected. I opened the Spark UI and started analyzing the execution plans. 
+<br> <span style="color: #0078D4;"><b >I Found 3 root causes: </b></span>
+<ul>
+<li>First — <span style="color: #0ae71c;"><b>MERGEs</b></span> were doing full table scans. Without Z-ORDER, Delta had no way to skip irrelevant files when looking for matching keys. I applied Z-ORDER on the MERGE join columns — that physically clusters matching rows, Delta's data skipping kicks in, and file reads drop significantly. <li>
+<li>Second — daily MERGEs were accumulating small files over time. Aggregation queries were opening hundreds of small files instead of a few large ones . Periodic <span style="color: #0ae71c;"><b>OPTIMIZE</b></span>  compacted them and reduced the file count Spark had to scan which improved the <b>schedular Efficiency</b>  </li>
+<li> Third — and most impactful — multiple joins between fact and dimension tables were all going through SortMerge, causing heavy shuffle. I checked table sizes in Spark UI and found one reference dimension was around 20 MB — just above the <b>default 10 MB auto-broadcast threshold</b>, so Spark wasn't picking it up automatically. I added an explicit <span style="color: #0ae71c;"><b>Broadcast HINT</b></span> , which eliminated the shuffle entirely — that table got sent to every executor once and the join happened locally. Immediately visible in the execution plan." </li>
+<li>The combination of these three — Z-ORDER for data skipping on MERGEs, OPTIMIZE for file compaction , and broadcast hint for the small dimension table joins — brought down the overall Gold layer runtime to 35-40 mins there by reducing the runtime by 40–45% </li>
 </li>
 <pre><code class="language-sql">
 result_df = df_large.join(
@@ -1883,6 +1888,8 @@ VACUUM sales_data RETAIN 168 HOURS -- scheduled separately with appropriate rete
 </code></pre>
 
 `,
+tip:`Contributions = what you actively did/built <br>
+Achievements = the measurable outcome/impact of what you did`,
         children: [],
     },
 
