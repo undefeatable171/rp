@@ -634,9 +634,8 @@ Safe by design — Silver MERGE on business key means reprocessing the same wind
                 a: `<div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.6; font-size:15px;">
 
 <p>
-<span style="color:#1F618D;font-weight:bold;">❓ What if two records have the same updated_at?</span><br>
-We rely on the source maintaining unique update timestamps. If needed, a composite watermark using <b>(updated_at, primary key)</b> can eliminate ambiguity.
-</p>
+<span style="color:#1F618D;font-weight:bold;">1. What if two records have the same updated_at?</span><br>
+Our PostgreSQL source stores updated_at with microsecond precision (TIMESTAMP(6), so we didn't encounter that scenario. If it did occur, we'd need an additional ordering column, such as an ingestion timestamp or source sequence, to make the selection deterministic</p>
 <p>
 <span style="color:#1F618D;font-weight:bold;">2. bronze table has both update_at and ingetion_timestamp,ingetion_date?</span><br>
 Yes.updated_at comes from the source and drives our watermark logic. ingest_timestamp is added by the pipeline at write time and is purely for audit and traceability — they're independent columns serving different purposes."
