@@ -203,7 +203,21 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                         a: `<p>No. SHIR is typically used with Azure Data Factory for on-prem connectivity, whereas our ingestion was implemented directly in Databricks using JDBC over the client's secure network.</p>`,
                         children: [],
                     },
-
+                    {
+                        q: `how much data`,
+                        a: ` The project wasn't completely live when I joined 1.5 years ago. The foundation had already been built, and some datasets were already being consumed. today, We process around 45–50 GB of new data every day. Since it's a long-running enterprise healthcare platform, the overall data stored across the Bronze, Silver, and Gold layers is in the several-terabyte range. I don't know the exact storage size because that's managed by the platform team, but it's definitely multiple terabytes.`,
+                        children: [],
+                    },
+                    {
+                        q: `Were you involved from the start?`,
+                        a: ` The project wasn't completely live when I joined 1.5 years ago. The foundation had already been built, and some datasets were already being consumed. My work mainly involved developing new pipelines, enhancing existing ones, performance optimization, and deploying additional modules as part of the phased rollou`,
+                        children: [],
+                    },
+                    {
+                        q: `before this which project`,
+                        a: `Before this healthcare project, I was part of a Professional Services project where we managed project, employee, timesheet, and revenue data for reporting and analytics.`,
+                        children: [],
+                    },
                     {
                         q: `Why Databricks for just 45–50 GB/day, not rdbms or Snowflake ingestion`,
                         a: ` 👉Current volume is moderate, but we chose Databricks for scalability, complex transformations like SCD2, and Delta features like MERGE and time travel.
@@ -212,20 +226,20 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                         children: [],
                     },
                     {
-                        q:`At which stage did you apply DQ checks—Bronze, Silver, or Gold? Why?`,
-                        a:`We applied DQ checks across all three layers. In Bronze, we validated file/schema and row counts to ensure successful ingestion. In Silver, we handled null checks, duplicates, data types, and business key validations to clean the data. In Gold, we validated business rules  before exposing data to reporting.`,
-                        children:[],
+                        q: `At which stage did you apply DQ checks—Bronze, Silver, or Gold? Why?`,
+                        a: `We applied DQ checks across all three layers. In Bronze, we validated file/schema and row counts to ensure successful ingestion. In Silver, we handled null checks, duplicates, data types, and business key validations to clean the data. In Gold, we validated business rules  before exposing data to reporting.`,
+                        children: [],
                     },
                     {
-                        q:`Can you give an example where a DQ check prevented bad data from going downstream?`,
-                        a:`In the Silver layer, we found claims with NULL patient_id due to an upstream issue. Our null check quarantined those records instead of processing them further, while valid records continued through the pipeline.
+                        q: `Can you give an example where a DQ check prevented bad data from going downstream?`,
+                        a: `In the Silver layer, we found claims with NULL patient_id due to an upstream issue. Our null check quarantined those records instead of processing them further, while valid records continued through the pipeline.
                         <br> This prevented incorrect healthcare metrics and reports in the Gold layer."`,
-                        children:[],
+                        children: [],
                     },
                     {
-                        q:`what business rules in Gold`,
-                        a:`In the Gold layer, we perform business validations rather than technical validations. For example, we ensure every claim has valid patient and provider records, verify ICD/CPT codes against reference data, check patient eligibility on the service date, and validate that claim amounts paid  does not exceed the allowed amount as per the fee schedule brfore reporting reporting.`,
-                        children:[],
+                        q: `what business rules in Gold/ what data validations / what data quality validations`,
+                        a: `In the Gold layer, we perform business validations rather than technical validations. For example, we ensure every claim has valid patient and provider records, verify ICD/CPT codes against reference data, check patient eligibility on the service date, and validate that claim amounts paid  does not exceed the allowed amount as per the fee schedule brfore reporting reporting. (SEE Domain Gold data quality validations)`,
+                        children: [],
                     },
                 ],
             },
@@ -290,8 +304,8 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                 children: []
             },
             {
-                q:`How email alerts are sent for failures/ dq checks?`,
-                a:`When an dq is failed/ new col came notebook calls an Azure Logic App (or similar notification service) via an HTTP request. The Logic App sends an email or Teams notification while the pipeline completes successfully.
+                q: `How email alerts are sent for failures/ dq checks?`,
+                a: `When an dq is failed/ new col came notebook calls an Azure Logic App (or similar notification service) via an HTTP request. The Logic App sends an email or Teams notification while the pipeline completes successfully.
                 <br>The Platform team  manages the Azure Logic App and provides its endpoint. We invoke that endpoint from our notebooks  whenever conditions such as schema changes, missing files, or data quality issues are detected, while allowing the pipeline to continue if required."
                <pre> <code class="language-python" >
                  expected = {"id","name","age"}
@@ -309,7 +323,7 @@ if new_columns:
         }
     )
 </code></code>`,
-                children:[],
+                children: [],
             },
 
         ],
@@ -1887,7 +1901,7 @@ VACUUM sales_data RETAIN 168 HOURS -- scheduled separately with appropriate rete
 </code></pre>
 
 `,
-tip:`Contributions = what you actively did/built <br>
+        tip: `Contributions = what you actively did/built <br>
 Achievements = the measurable outcome/impact of what you did`,
         children: [],
     },
