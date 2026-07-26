@@ -1950,34 +1950,4 @@ Achievements = the measurable outcome/impact of what you did`,
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
-    {
-        cat: " Scenario Based",
-        q: `Challenges faced and overcome`,
-        answer: `<li> One challenge we faced was schema changes from the Upstream PostgreSQL source, like new columns being added without notice, which used to break our Bronze-to-Silver pipelines.. Since Bronze was stored in Parquet, these columns were ingested without failure but led to schema drift. In Silver, we explicitly select required columns instead of using select *, so pipelines remain stable. We also detect new columns by comparing schemas during ingestion and trigger alert notifications, allowing us to review and onboard them in a controlled manner.</li>
-<li>While reading Excel files from Unity Catalog Volumes, Spark initially threw a File Not Found error. After validating the path and volume access permissions, I realized the issue was actually due to Spark not having a native Excel reader.<br>
-
-By default, Spark supports formats like Parquet, CSV, and JSON, but not Excel. So even though the file existed, Spark couldn't interpret it correctly. <br>
-
-To resolve this, I added the external library com.crealytics:spark-excel_2.12:0.13.5 to the cluster. After that, I was able to successfully read the file using the custom format.</li>`,
-        children: [],
-    },
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
-    {
-        cat: "Technical depth",
-        q: "What Azure and Databricks tools do you use daily?",
-        answer: `"Day to day: Databricks for compute and notebook-based pipeline development, PySpark for distributed transformations, Delta Lake for the storage layer, ADLS Gen2 for raw and processed data storage, and Azure Data Factory for orchestration and triggering pipelines. Git for version control across the team. I use SQL heavily inside Databricks for the Gold-layer aggregations."`, children: []
-
-    },
-
-    ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
-
-    {
-        cat: "Mindset & growth",
-        q: "What are you looking to learn or work on next?",
-        answer: `"I want to go deeper on real-time streaming — I've only worked in batch so far and I want to get hands-on with Spark Structured Streaming or Delta Live Tables. I'm also interested in data quality frameworks and working closer to the platform side — infrastructure-as-code, cluster tuning at a deeper level. And eventually data architecture ownership — not just building pipelines but designing the systems they run on."`,
-        children: []
-    }
 ];
