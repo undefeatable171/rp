@@ -4,17 +4,60 @@ const qs = [
     {
         cat: "Story & fit",
         q: "Relted links",
-        answer: `<p>  <a href="https://undefeatable171.github.io/int-prep/healthcare-notes.html" target="_blank" class="link">
-    Health care
-</a></p> <br>
-<p><a href="https://undefeatable.github.io/int-prep/azure/d.html" target="_blank" class="link">
-    Azure services  related </a></p>
+        answer: `
+        <p> Domain: </p>
+        
+        <p>  <a href="https://undefeatable171.github.io/int-prep/domain/" target="_blank" class="link">
+    Health care Domain Theory
+</a></p>
+<p><a href="https://undefeatable.github.io/int-prep/tablesources/" target="_blank" class="link">
+     table sources , silver, gold transformations , derived cols in gold</a></p>
 	<br>
-	<p><a href="https://undefeatable171.github.io/int-prep/dbx/content.html" target="_blank" class="link">
-    DBX & SPARK related </a></p>
-	<br>
-	<p><a href="https://undefeatable171.github.io/int-prep/git_notes.md" target="_blank" class="link">
-    git notes </a></p>`,
+    <br>
+<p> <span style="color:red;"> <b>End-to-End</b> </span></p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/datasources&formats/" target="_blank" class="link">
+Data Sources, File Formats & Ingestion Types </a></p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/end-end/" target="_blank" class="link">
+Spark, Databricks & Optimizations </a></p>
+
+<br>
+
+
+<p> Git & SDLC </p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/SDLC/" target="_blank" class="link">
+SDLC, User Stories & Story Points </a></p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/git_notes/" target="_blank" class="link">
+Git Notes </a></p>
+
+<br>
+
+
+<p> Managerial </p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/R2/" target="_blank" class="link">
+Managerial Interview </a></p>
+
+<br>
+
+
+<p> Platform & Azure </p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/UC/" target="_blank" class="link">
+Unity Catalog & Databricks-ADLS Integration </a></p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/azure/" target="_blank" class="link">
+Azure Q&A & Storage </a></p>
+
+<p><a href="https://undefeatable171.github.io/int-prep/cicd/" target="_blank" class="link">
+CI/CD - Databricks & Azure DevOps </a></p>
+
+<br>
+    
+    `,
         children: [],
     },
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
