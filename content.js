@@ -50,7 +50,7 @@ Managerial Interview </a></p>
 Unity Catalog & Databricks-ADLS Integration </a></p>
 
 <p><a href="https://undefeatable171.github.io/int-prep/azure/" target="_blank" class="link">
-Azure Q&A & Storage </a></p>
+Azure Q&A & Storage & ADF </a></p>
 
 <p><a href="https://undefeatable171.github.io/int-prep/cicd/" target="_blank" class="link">
 CI/CD - Databricks & Azure DevOps </a></p>
