@@ -90,17 +90,7 @@ Coding problems </a></p>
                 a: ` TCS has given me a strong foundation in building production-grade data pipelines on Azure Databricks and working with large-scale healthcare data.
                 <br> I'm now looking for an opportunity where I can take on broader responsibilities, work on more complex data engineering problems, and contribute to the design and development of scalable data platforms. `,
                 children: [
-                    {
-                        q: "what optimizations",
-                        a: "👉 In our pipelines, I mainly worked on reducing job runtime . For example, one of our joins between large claim tables was causing heavy shuffle. I optimized it using broadcast join for smaller dimension tables and repartitioned data based on join keys. This reduced runtime by around 30–40%.",
-                        children: [
-                            {
-                                q: `how you identifiedbottle necks`,
-                                a: `“I identified the bottleneck using Spark UI — stages with high shuffle read and skewed tasks."`,
-                                children: []
-                            },
-                        ],
-                    },
+
                     {
                         q: `what design decisions are you ref to`,
                         a: `👉“Primarily around structuring pipelines — deciding how to split transformations across bronze, silver, and gold, choosing incremental vs full loads, and partitioning strategies for large tables.”
@@ -108,18 +98,10 @@ Coding problems </a></p>
                         children: [],
                     },
                     {
-                        q: `what makes systems scabale`,
-                        a: `Scalability depends on handling increasing data without performance degradation. In our case, we ensured scalability using partitioning on high-cardinality columns, incremental processing instead of full loads, and avoiding data skew during joins.`,
-                        children: [],
-                    },
-                    {
-                        q: `How do you ensure data quality?`,
-                        a: `In silver layer, we apply checks like removing duplicates, handling null values, and validating schema. We also compare record counts between source and target. For critical tables, we added validation queries to ensure consistency before loading into gold.`,
-                        children: [],
-                    },
-                    {
-                        q: `Handling large data volumes?`,
-                        a: `For large datasets, we use partitioning and avoid small file issues by optimizing file sizes. We also use Delta format for efficient reads and writes. During joins, we handle skew using repartitioning or broadcast where applicable`,
+                        q: `what makes systems scabale / Handling large data volumes`,
+                        a: `Scalability depends on handling increasing data without performance degradation.
+<div> <p><b>How I make Databricks pipelines scalable:</b></p> <ul> <li><b>Columnar formats:</b> Use Parquet/Delta to efficiently read only the required data.</li> <li><b>Partitioning:</b> Partition large tables on suitable columns, such as date, to reduce data scanning.</li> <li><b>Incremental processing:</b> Process only new or changed data instead of performing full loads.</li> <li><b>Partition pruning:</b> Read only the relevant partitions based on filter conditions.</li> <li><b>Predicate pushdown:</b> Push filters closer to the data source to avoid reading unnecessary rows.</li> <li><b>Column pruning:</b> Select only the required columns instead of reading the entire table.</li> <li><b>OPTIMIZE &amp; Z-Ordering:</b> Compact small files and organize data to improve data skipping.</li> <li><b>Join &amp; shuffle optimization:</b> Use broadcast joins for small tables and AQE to optimize execution dynamically.</li> <li><b>Autoscaling:</b> Dynamically add or remove workers based on workload.</li> <li><b>Monitoring:</b> Monitor job performance and identify bottlenecks as data volume increases.</li> </ul> </div>
+                        .`,
                         children: [],
                     },
                     {
@@ -136,7 +118,7 @@ Coding problems </a></p>
             },
             {
                 q: `have you ever worked on any end-end data Frame work ?`,
-                a: `"Yes, I've worked on an end-to-end data pipeline built on Azure Databricks. We follow Medallion architecture — starting from raw ingestion in Bronze, transformation and deduplication in Silver, and business-ready aggregations in Gold. The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB of healthcare data daily. From source to BI consumption — that's our end-to-end framework." `,
+                a: `"Yes, I've worked on an end-to-end data pipeline built on Azure Databricks. We follow Medallion architecture — starting from raw ingestion in Bronze, transformation and deduplication in Silver, and enriching the tables in Gold. The entire pipeline is orchestrated through Databricks Workflows, processing around 45–50 GB of healthcare data daily. From source to BI consumption — that's our end-to-end framework." `,
                 children: [{
                     q: `"Can you tell me more about the domains of the projects that you have worked with?"`,
                     a: `I have primarily worked in the Healthcare domain for a US-based client. The project deals with clinical and financial data.
@@ -155,9 +137,10 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
                             a: `HIPAA compliance in our project is handled at multiple levels.
   <ul>
   <li>In our project, sensitive fields like SSN and home address are handled at the source level itself — data comes from the client's PostgreSQL system already tokenized  before landing in our pipeline.</li>
-  <li>Business identifiers like MemberID, ClaimID, ProviderID, NDC codes are accessible as they're needed for ETL and joins — these are not considered hard PII under HIPAA.  Raw PII visibility is restricted to the client's compliance team — we don't interact with it at any layer of our Medallion pipeline.</li>
+  <li>Business identifiers like MemberID, ClaimID, ProviderID, NDC codes are accessible as they're needed for ETL and joins. Raw PII visibility is restricted to the client's compliance team — we don't interact with it at any layer of our Medallion pipeline.</li>
   <li>At the pipeline level, no PII fields are logged or printed in notebook outputs or job logs.</li>
   <li>Access is controlled through Azure AD groups synced into Databricks via SCIM — we follow the least privilege principle, each group gets exactly what their job needs.</li>
+  <li> We use Unity Catalog for RBAC and row/column-level controls to ensure users access only the data they need along with auditing to track data access and activity. </li>
   <ul>`,
                             children: [],
 
@@ -288,6 +271,15 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                     {
                         q: `what business rules in Gold/ what data validations / what data quality validations`,
                         a: `In the Gold layer, we perform business validations rather than technical validations. For example, we ensure every claim has valid patient and provider records, verify ICD/CPT codes against reference data, check patient eligibility on the service date, and validate that claim amounts paid  does not exceed the allowed amount as per the fee schedule brfore reporting reporting. (SEE Domain Gold data quality validations)`,
+                        children: [],
+                    },
+                    {
+                        q: `How do you ensure data quality?`,
+                        a: `Data quality refers to the accuracy, completeness, consistency of your data. It ensures that your data can be trusted for making informed decisions. In a data pipeline, maintaining high data quality is crucial because poor-quality data can lead to incorrect insights, flawed business strategies, and even significant financial losses.<br> DQ checks i follow
+                        <ul> <li><b>Schema Validation:</b> Ensures the incoming data structure matches the expected columns and schema.</li> <li><b>Data Type Validation:</b> Ensures each column contains the expected data type, such as integer, string, or date.</li> <li><b>Null Value Check:</b> Identifies missing/null values in columns where data is mandatory.</li>
+                         <li><b>Duplicate Record Check:</b> Detects duplicate records based on primary keys or unique business keys.</li>
+                          <li><b>Business Rule Validation:</b> Verifies that data follows specific business rules and conditions.</li> </ul>
+                        `,
                         children: [],
                     },
                 ],
