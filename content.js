@@ -196,7 +196,7 @@ The second consists of file-based sources such as daily CSV files for Eligibilit
         <p> The Bronze layer is responsible for raw data ingestion. PostgreSQL data is ingested incrementally, while file-based sources are processed on their respective schedules.
 The Bronze layer preserves raw source data in Parquet format, applying only minimal transformations like schema alignment and audit metadata.<ps>Stored as partition by ingetion_date, append only</p>
         <span style="color: #0078D4;">Silver:</span><br>
-        <p>The Silver layer standardizes and cleans the data by applying data quality validations like null handling, datatype standardization, and deduplication. The cleaned data is then MERGED into cumulative Delta tables, while reference datasets are refreshed using full reload whenever new versions are received.</p>
+        <p>The Silver layer cleans and standardizes the data by handling null values , standardizing data types, and removing duplicate records. The cleaned data is then MERGED into cumulative Delta tables, while reference datasets are refreshed using full reload whenever new versions are received.</p>
         <span style="color: #0078D4;">Gold:</span><br>
 
         <p>The Gold layer is our business consumption layer, where dimensions preserve history using SCD Type 2 while fact tables are enriched with dimensions and reference data for downstream analytics."
@@ -237,12 +237,12 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                     },
                     {
                         q: `how much data`,
-                        a: ` The project wasn't completely live when I joined 1.5 years ago. The foundation had already been built, and some datasets were already being consumed. today, We process around 45–50 GB of new data every day. Since it's a long-running enterprise healthcare platform, the overall data stored across the Bronze, Silver, and Gold layers is in the several-terabyte range. I don't know the exact storage size because that's managed by the platform team, but it's definitely multiple terabytes.`,
+                        a: ` We process around 45–50 GB of new data every day. Since it's a long-running enterprise healthcare platform, the overall data stored across the Bronze, Silver, and Gold layers is in the several-terabyte range. I don't know the exact storage size because that's managed by the platform team, but it's definitely multiple terabytes.`,
                         children: [],
                     },
                     {
                         q: `Were you involved from the start?`,
-                        a: ` The project wasn't completely live when I joined 1.5 years ago. The foundation had already been built, and some datasets were already being consumed. My work mainly involved developing new pipelines, enhancing existing ones, performance optimization, and deploying additional modules as part of the phased rollou`,
+                        a: ` The project wasn't completely live when I joined 2 years ago. The foundation had already been built, and some datasets were already being consumed. My work mainly involved developing new pipelines, enhancing existing ones, performance optimization, and deploying additional modules as part of the phased rollou`,
                         children: [],
                     },
                     {
