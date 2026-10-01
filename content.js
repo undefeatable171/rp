@@ -168,19 +168,26 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
         answer: `
 <div style="font-family:Segoe UI,Arial,sans-serif; line-height:1.5; font-size:13px;">
 
-    <span style="color: #0078D4;">Domain & Objective:</span> 
-    <p>I'm currently working on a US healthcare project for a hospital network operating multiple hospitals and  clinics. The objective of our platform is to consolidate data from multiple operational systems into a centralized data platform for downstream reporting, analytics. We built this platform on Azure Databricks using Medallion architecture, for clean separation between raw ingestion, transformation, and business-ready data.
+    <span style="color: #0078D4;">Domain & Type of data:</span> 
+    <p>
+I'm working on a healthcare data platform for a US healthcare organization operating multiple hospitals and outpatient clinics. The data we handle falls into three broad categories: clinical and operational data such as members, providers and encounters; financial data such as claims, claims adjudication and prior authorization along with reference data such as ICD, CPT and fee schedules.
   </p>
-<span style="color: #0078D4;">Data Sources:</span> 
+<span style="color: #0078D4;">The problem:</span> 
   <p>
-Our primary sources are an on-premises PostgreSQL database containing operational healthcare data, along with CSV and Excel files such as eligibility extracts, claims adjudication, prior authorization, and reference datasets like ICD, CPT, fee schedules, and provider roster.<br> Overall, we  processes around 45–50 GB of data per day and the core operational pipelines run every four hours using Databricks Workflows.  </p>
-<span style="color: #0078D4;">Layers:</span>
+The main challenge was that the data comes from different sources, in different formats, and at different frequencies. Our primary source is an on-premises PostgreSQL OLTP system containing operational healthcare data such as members, providers, encounters, claims and procedures. This data changes throughout the day, while vendor files such as claims adjudication and prior authorization arrive daily and are landed into ADLS, and reference data can arrive monthly or annually. This created a need for a consistent, centralized dataset for reporting and analytics.
+</p>
+  <span style="color: #0078D4;"> Objective:</span>
   <p>
-At a high level, Bronze is our raw ingestion layer, Silver is where we clean, standardize, and maintain the latest operational data, and Gold is our business consumption layer where we build dimension and fact tables for downstream analytics.  </p>
-    <span style="color: #0078D4;">Outro:</span><br>
+The objective of our project is to build a centralized cloud data platform that can ingest these different sources, standardize and integrate the data, and provide reliable business-ready datasets to downstream teams. We use Databricks with a Medallion architecture to separate raw ingestion, data cleansing and business transformations
+  </p>
+    <span style="color: #0078D4;"> Layers </span><br>
   <p>
-We use Unity Catalog for centralized governance, and since the data contains PHI, access is controlled through fine-grained security. Downstream finance, BI, and data science teams consume the curated datasets we deliver. Ourresponsibility is building and maintaining the data platform, while the BI team owns the reporting  </p>
-
+Bronze contains the raw data and preserves the source data, giving us a reliable replayable layer. The core PostgreSQL pipelines run every four hours using incremental extraction, while file-based sources are processed according to their delivery schedules, and all Bronze data is stored as Parquet. Silver is where we standardize datatypes, apply data-quality validations, handle duplicates and incrementally MERGE the data into cumulative Delta tables. Gold contains business-ready fact and dimension data for downstream consumption.
+  </p>
+      <span style="color: #0078D4;"> Layers </span><br>
+<p>
+The curated Gold datasets are consumed by downstream finance, operations and BI/analytics teams for reporting and business analysis. We also use Unity Catalog for centralized governance and access control of sensitive healthcare data.
+</p>
 </div>
 `,
         tip: `Just say this , if asked then continue each layer details.`,
@@ -189,9 +196,8 @@ We use Unity Catalog for centralized governance, and since the data contains PHI
                 q: `detailed project flow`,
                 a: `
         <span style="color: #0078D4;">Sources:</span><br>
-        <p> We have two primary source types. <ol><li>The first is an on-premises PostgreSQL database containing six core operational tables: Patients, Providers, Encounters, Claims, Diagnoses, and Procedures.</li><li>
-
-The second consists of file-based sources such as daily CSV files for Eligibility, Claims Adjudication, and Prior Authorization responses, along with periodic reference files like ICD-10, CPT, Fee Schedule, and Provider Roster.</li></ol></p>
+        <p> COming to our sources <ol><li>The first is an on-premises PostgreSQL database containing  core operational tables like brz_memeber_master, brz_Provider_master, brz_Encounters_details, brz_Claims, brz_Diagnoses, and brz_Procedures.</li><li>
+The second consists of vendor-provided flat files. Vendors push delimiter-separated .dat files through SFTP, which are landed in ADLS Gen2. These include daily Claims Adjudication and Prior Authorization files, along with periodic reference files such as ICD-10, CPT, Fee Schedule, and Provider Roster. </li></ol></p>
         <span style="color: #0078D4;">Bronze:</span><br>
         <p> The Bronze layer is responsible for raw data ingestion. PostgreSQL data is ingested incrementally, while file-based sources are processed on their respective schedules.
 The Bronze layer preserves raw source data in Parquet format, applying only minimal transformations like schema alignment and audit metadata.<ps>Stored as partition by ingetion_date, append only</p>
@@ -250,6 +256,7 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                         a: `Before this healthcare project, I was part of a Professional Services project where we managed project, employee, timesheet, and revenue data for reporting and analytics.`,
                         children: [],
                     },
+                    
                     {
                         q: `Why Databricks for just 45–50 GB/day, not rdbms or Snowflake ingestion`,
                         a: ` 👉Current volume is moderate, but we chose Databricks for scalability, complex transformations like SCD2, and Delta features like MERGE and time travel.
@@ -511,7 +518,7 @@ As long as the application updates the <code>updated_at</code> column, those rec
 
 <div style="margin-bottom:18px;">
     <div style="color:#1565C0;">Q15. Was the connectivity through VPN, ExpressRoute or Private Link?</div>
-    <div>I wasn't involved in the infrastructure setup, so I can't confirm the underlying network technology.</div>
+    <div>In our project Networking is owned by the Platform team — setting up VPN ,firewall, DNS. I own the Databricks-side integration: secrets, JDBC/Unity Catalog setup, testing connectivity, and validating the read. I collaborate with them if there’s a connectivity issue.</div>
 </div>
 
 <div style="margin-bottom:18px;">
