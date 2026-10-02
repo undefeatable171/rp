@@ -170,7 +170,7 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
 
     <span style="color: #0078D4;">Domain & Type of data:</span> 
     <p>
-I'm working on a healthcare data platform for a US healthcare organization operating multiple hospitals and outpatient clinics. The data we handle falls into three broad categories: clinical and operational data such as members, providers and encounters; financial data such as claims, claims adjudication and prior authorization along with reference data such as ICD, CPT and fee schedules.
+I'm working on a healthcare data platform for a US healthcare organization operating multiple hospitals and outpatient clinics. The platform brings together three types of data: clinical and operational data like members, providers, and encounters; financial data like claims, claims adjudication, and prior authorization; and reference data like ICD, CPT, and fee schedules.
   </p>
 <span style="color: #0078D4;">The problem:</span> 
   <p>
@@ -178,15 +178,19 @@ The main challenge was that the data comes from different sources, in different 
 </p>
   <span style="color: #0078D4;"> Objective:</span>
   <p>
-The objective of our project is to build a centralized cloud data platform that can ingest these different sources, standardize and integrate the data, and provide reliable business-ready datasets to downstream teams. We use Databricks with a Medallion architecture to separate raw ingestion, data cleansing and business transformations
+The objective of our project is to build a centralized cloud data platform that can ingest these different sources, standardize and integrate the data, and provide reliable business-ready datasets to downstream teams. We used Databricks with  Medallion architecture for clear seperation of raw ingestion, data cleansing and business transformations
   </p>
     <span style="color: #0078D4;"> Layers </span><br>
   <p>
-Bronze contains the raw data and preserves the source data, giving us a reliable replayable layer. The core PostgreSQL pipelines run every four hours using incremental extraction, while file-based sources are processed according to their delivery schedules, and all Bronze data is stored as Parquet. Silver is where we standardize datatypes, apply data-quality validations, handle duplicates and incrementally MERGE the data into cumulative Delta tables. Gold contains business-ready fact and dimension data for downstream consumption.
+Bronze holds raw, replayable source data. The core PostgreSQL pipelines run every four hours using incremental extraction, while file-based sources are processed as per their delivery schedules, and all Bronze data is stored as Parquet. Silver is where we standardize datatypes, apply data-quality validations, handle duplicates and incrementally MERGE the data into cumulative Delta tables. Gold contains business-ready fact and dimension data for downstream consumption.
   </p>
-      <span style="color: #0078D4;"> Layers </span><br>
+      <span style="color: #0078D4;"> Downstreams </span><br>
 <p>
 The curated Gold datasets are consumed by downstream finance, operations and BI/analytics teams for reporting and business analysis. We also use Unity Catalog for centralized governance and access control of sensitive healthcare data.
+</p>
+<p>
+<span style="color: #0078D4;"> Role </span><br>
+As a Data Engineer, I own the claims area end-to-end across Silver and Gold — building the transformation logic, implementing data-quality checks and incremental MERGEs and supporting them in production.
 </p>
 </div>
 `,
@@ -256,7 +260,7 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                         a: `Before this healthcare project, I was part of a Professional Services project where we managed project, employee, timesheet, and revenue data for reporting and analytics.`,
                         children: [],
                     },
-                    
+
                     {
                         q: `Why Databricks for just 45–50 GB/day, not rdbms or Snowflake ingestion`,
                         a: ` 👉Current volume is moderate, but we chose Databricks for scalability, complex transformations like SCD2, and Delta features like MERGE and time travel.
