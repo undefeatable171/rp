@@ -170,11 +170,11 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
 
     <span style="color: #0078D4;">Domain & Type of data:</span> 
     <p>
-I'm working on a healthcare data platform for a US healthcare organization operating multiple hospitals and outpatient clinics. The platform brings together three types of data: clinical and operational data like members, providers, and encounters; financial data like claims, claims adjudication, and prior authorization; and reference data like ICD, CPT, and fee schedules.
+I'm working on a healthcare data platform for a US healthcare organization operating multiple hospitals and outpatient clinics. The platform handles operational and clinical data such as members, providers and encounters, claims and administrative data such as claims adjudication and prior authorization, and reference data such as ICD, CPT and fee schedules.
   </p>
 <span style="color: #0078D4;">The problem:</span> 
   <p>
-The main challenge was that the data comes from different sources, in different formats, and at different frequencies. Our primary source is an on-premises PostgreSQL OLTP system containing operational healthcare data such as members, providers, encounters, claims and procedures. This data changes throughout the day, while vendor files such as claims adjudication and prior authorization arrive daily and are landed into ADLS, and reference data can arrive monthly or annually. This created a need for a consistent, centralized dataset for reporting and analytics.
+The main challenge was that data came from different sources and at different frequencies. Our primary source is an on-premises PostgreSQL OLTP system containing operational data such as members, providers, encounters, claims and procedures. These tables are continuously updated throughout the day, so we extract changes incrementally every four hours. Vendor files such as claims adjudication and prior authorization are delivered daily to ADLS, while reference data such as ICD, CPT and fee schedules may arrive monthly or annually.
 </p>
   <span style="color: #0078D4;"> Objective:</span>
   <p>
@@ -182,7 +182,7 @@ The objective of our project is to build a centralized cloud data platform that 
   </p>
     <span style="color: #0078D4;"> Layers </span><br>
   <p>
-Bronze holds raw, replayable source data. The core PostgreSQL pipelines run every four hours using incremental extraction, while file-based sources are processed as per their delivery schedules, and all Bronze data is stored as Parquet. Silver is where we standardize datatypes, apply data-quality validations, handle duplicates and incrementally MERGE the data into cumulative Delta tables. Gold contains business-ready fact and dimension data for downstream consumption.
+Bronze holds raw, replayable source data. The core PostgreSQL pipelines run every four hours using incremental extraction, while file-based sources are processed as per their delivery schedules, and all Bronze data is stored as Parquet. Silver standardizes schemas and data types, applies data-quality validations and deduplication, and incrementally merges changes into cumulative Delta tables. Gold contains business-ready fact and dimension data for downstream consumption.
   </p>
       <span style="color: #0078D4;"> Downstreams </span><br>
 <p>
@@ -190,7 +190,7 @@ The curated Gold datasets are consumed by downstream finance, operations and BI/
 </p>
 <p>
 <span style="color: #0078D4;"> Role </span><br>
-As a Data Engineer, I own the claims area end-to-end across Silver and Gold — building the transformation logic, implementing data-quality checks and incremental MERGEs and supporting them in production.
+As a Data Engineer, I own the claims area end-to-end across Silver and Gold — building the transformation logic, implementing data-quality checks and incremental MERGEs and troubleshooting them in production.
 </p>
 </div>
 `,
