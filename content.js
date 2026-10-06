@@ -142,7 +142,21 @@ https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use th
   <li>Access is controlled through Azure AD groups synced into Databricks via SCIM — we follow the least privilege principle, each group gets exactly what their job needs.</li>
   <li> We use Unity Catalog for RBAC and row/column-level controls to ensure users access only the data they need along with auditing to track data access and activity. </li>
   <ul>`,
-                            children: [],
+                            children: [
+{
+    q:`How tokens works / who access`,
+    a:`SSN and DOB ,mobile no are tokenized at the source — Databricks only stores tokens, never raw PHI<br>
+    BI and data science access tokenized  views through UC-governed surfaces<br>
+     Raw PII visibility is restricted to the client's compliance team. Re-identification is a separate, restricted, audited path outside the analytics pipeline. UC governs the tokens; the vault governs re-identification. Not part of DBX"`,
+    children:[],
+},
+{
+    q:` who ceates row filters , column masks `,
+    a:` The platform team owns Unity Catalog end to end. They define the row filters and column masks, register the functions, apply them to tables, and manage grants. DEs consume the governed tables — we don't manage access control ourselves." `,
+    children:[],
+},
+
+                            ],
 
                         },
                     ],
@@ -311,7 +325,7 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
             },
             {
                 q: `why 4 hours cadence?`,
-                a: `The cadence was decided based on business requirements and source data availability. <br> 💠 Since new operational data was generated throughout the day, a daily refresh would introduce unnecessary delay. <br> 💠 A 4-hour schedule provided multiple intraday updates while keeping compute costs and pipeline overhead reasonable.`,
+                a: `The 4-hour cadence is driven by the business SLA. <br> 💠 Vendor files land daily, but the on-prem PostgreSQL source — patients, providers, encounters, claims — updates throughout the day and Finance teams need that intraday data refreshed within 4 hours so same-day work isn't delayed. <br> 💠 Daily would be too slow for the revenue cycle. Hourly or streaming would add cost and complexity with no business benefit, since payer files only land once a day and the source doesn't need real-time. So 4 hours balances intraday freshness against cost.<br> My job was to meet that SLA `,
                 children: [
                     {
                         q: `who decided 4 hours?`,
@@ -319,9 +333,8 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                         children: [],
                     },
                     {
-                        q: `what business requirement drove 4 hours?`,
-                        a: `The business requirement was that downstream reporting should be refreshed multiple times during the day instead of waiting for the next day's batch. Since new claims and encounter records were continuously generated, the reporting teams wanted relatively fresh data for operational reporting.`,
-                        children: [],
+                        q: `WHy only 4 ?`,
+a:`The 4-hour cadence came from the business SLA. Finance and operations needed refreshed claims and encounters within 4 hours of source updates. My job was to meet that SLA with headroom — the critical path runs in 35–45 minutes, well inside the window. The pipeline is configurable, so if the SLA changed, we could tighten or relax it without redesign.`,                        children: [],
                     },
                 ],
             },
