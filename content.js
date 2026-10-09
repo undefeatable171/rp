@@ -204,7 +204,7 @@ The curated Gold datasets are consumed by downstream finance, operations and BI/
 </p>
 <p>
 <span style="color: #0078D4;"> Role </span><br>
-As a Data Engineer, I own the claims area end-to-end across Silver and Gold — building the transformation logic, implementing data-quality checks and incremental MERGEs and troubleshooting them in production.
+As a Data Engineer. My primary role is to develop and maintain batch data pipelines using Azure Databricks, PySpark, SQL and ADF, and ensure reliable data delivery for downstream analytics and reporting.
 </p>
 </div>
 `,
@@ -1949,8 +1949,8 @@ I validate Gold against Silver, review recent pipeline runs, and determine wheth
 Initially, the Gold layer jobs were running for 50-55 mins and sometimes taking much longer than expected. I opened the Spark UI and started analyzing the execution plans. 
 <br> <span style="color: #0078D4;"><b >I Found 3 root causes: </b></span>
 <ul>
-<li>First — <span style="color: #0ae71c;"><b>MERGEs</b></span> were doing full TARGET table scans. every file had a wide min/max range, so Delta couldn't skip irrelevant files when hunting for matching keys.I applied ZORDER on the MERGE join column on target Silver and Gold tables — tightening per-file stats so Delta skips files that can't contain matching keys, reducing target file reads and MERGE execution time significantly.  <li>
-<li>Second — daily MERGEs were accumulating small files over time. Aggregation queries were opening hundreds of small files instead of a few large ones . Periodic <span style="color: #0ae71c;"><b>OPTIMIZE</b></span>  compacted them and reduced the file count Spark had to scan which improved the <b>schedular Efficiency</b>  </li>
+<li>First — <span style="color: #0ae71c;"><b>MERJoinss</b></span> were doing full TARGET table scans. when i checked in spark ui and then execution plan of long running query the number of files read is almost same as num of files in table which means every file had a wide min/max range, so Delta couldn't skip irrelevant files when hunting for matching keys.I applied ZORDER on the MERGE join column on target  Gold tables — tightening per-file stats so Delta skips files that can't contain matching keys, reducing target file reads and MERGE execution time significantly.  <li>
+<li>Second — Another thing is <pre>spark ui=> long running query =>exec plan => size of files read/ no.of files read and saw KBs </pre>. daily MERGEs were accumulating small files over time. Aggregation queries were opening hundreds of small files instead of a few large ones  Periodic <span style="color: #0ae71c;"><b>OPTIMIZE</b></span>  compacted them and reduced the file count Spark had to scan which improved the <b>schedular Efficiency</b>  </li>
 <li> Third — and most impactful — multiple joins between fact and dimension tables were all going through SortMerge, causing heavy shuffle. I checked table sizes in Spark UI and found one reference dimension was around 20 MB — just above the <b>default 10 MB auto-broadcast threshold</b>, so Spark wasn't picking it up automatically. I added an explicit <span style="color: #0ae71c;"><b>Broadcast HINT</b></span> , which eliminated the shuffle entirely — that table got sent to every executor once and the join happened locally. Immediately visible in the execution plan." </li>
 <li>The combination of these three — Z-ORDER for data skipping on MERGEs, OPTIMIZE for file compaction , and broadcast hint for the small dimension table joins — brought down the overall Gold layer runtime to 35-40 mins there by reducing the runtime by 40–45% </li>
 </li>
