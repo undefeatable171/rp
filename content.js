@@ -75,8 +75,7 @@ Coding problems </a></p>
         children: [
             {
                 q: `tell me about yourself`,
-                a: ` Hi, I'm Prathap. I'm currently working as an Azure Data Engineer at TCS with around 3 years of experience. I primarily work on a US healthcare project, building scalable batch ETL pipelines using Azure Databricks, PySpark, Python, and SQL. 
-                <br>I hold both the Databricks Certified Data Engineer Associate and Professional certifications, and coming to academics,  I have completed my graduaction in Electronics and Communication Engineering from VR Siddhartha Engineering College, Vijayawada.`,
+                a: ` Hi, I'm XX. I'm currently working as an Data Engineer at TCS with around 3.5 years of experience. <br> I primarily work on a US healthcare data platform for an organization operating multiple hospitals and outpatient clinics. My work involves building scalable batch ETL pipelines using Azure Databricks, PySpark, Python, and SQL.<br> I hold both the Databricks Certified Data Engineer Associate and Professional certifications, and coming to academics,  I have completed my graduaction in Electronics and Communication Engineering from VR Siddhartha Engineering College, Vijayawada.`,
                 children: [
                     {
                         q: "Why ECE to Data Engineering?",
@@ -100,7 +99,7 @@ Coding problems </a></p>
                     {
                         q: `what makes systems scabale / Handling large data volumes`,
                         a: `Scalability depends on handling increasing data without performance degradation.
-<div> <p><b>How I make Databricks pipelines scalable:</b></p> <ul> <li><b>Columnar formats:</b> Use Parquet/Delta to efficiently read only the required data.</li> <li><b>Partitioning:</b> Partition large tables on suitable columns, such as date, to reduce data scanning.</li> <li><b>Incremental processing:</b> Process only new or changed data instead of performing full loads.</li> <li><b>Partition pruning:</b> Read only the relevant partitions based on filter conditions.</li> <li><b>Predicate pushdown:</b> Push filters closer to the data source to avoid reading unnecessary rows.</li> <li><b>Column pruning:</b> Select only the required columns instead of reading the entire table.</li> <li><b>OPTIMIZE &amp; Z-Ordering:</b> Compact small files and organize data to improve data skipping.</li> <li><b>Join &amp; shuffle optimization:</b> Use broadcast joins for small tables and AQE to optimize execution dynamically.</li> <li><b>Autoscaling:</b> Dynamically add or remove workers based on workload.</li> <li><b>Monitoring:</b> Monitor job performance and identify bottlenecks as data volume increases.</li> </ul> </div>
+<div> <p><b>How I make Databricks pipelines scalable:</b></p> <ul> <li><b>Columnar formats:</b> Use Parquet/Delta to efficiently read only the required data.</li> <li><b>Partitioning:</b> Partition large tables on suitable columns, such as date, for eff partition pruning to reduce data scanning.</li> <li><b>Incremental processing:</b> Process only new or changed data instead of performing full loads.</li> <li><b>Predicate pushdown:</b> Push filters closer to the data source to avoid reading unnecessary rows.</li> <li><b>Column pruning:</b> Select only the required columns instead of reading the entire table.</li> <li><b>OPTIMIZE &amp; Z-Ordering:</b> Compact small files and organize data to improve data skipping.</li> <li><b>Join &amp; shuffle optimization:</b> Use broadcast joins for small tables and AQE to optimize execution dynamically.</li> <li><b>Autoscaling:</b> Dynamically add or remove workers based on workload.</li>  </ul> </div>
                         .`,
                         children: [],
                     },
@@ -124,8 +123,7 @@ Coding problems </a></p>
                     a: `I have primarily worked in the Healthcare domain for a US-based client. The project deals with clinical and financial data.
 . We receive data from multiple Source systems systems containing member information, provider details, claim transactions, diagnosis codes, and payment information.
 
-My role is to build and maintain Databricks-based ETL pipelines that ingest data from PostgreSQL and file-based sources, transform it, and make it available for downstream reporting, analytics, and data science teams.<br>
-https://prathap-chowdary.github.io/int-prep/healthcare-notes.html  ------ use this for healthcare notes`,
+My role is to build and maintain Databricks-based ETL pipelines that ingest data from PostgreSQL and file-based sources, transform it, and make it available for downstream reporting, analytics, and data science teams.`,
                     children: [
                         {
                             q: `"You said healthcare claims. What are the top 5 datasets you process?"`,
@@ -191,9 +189,10 @@ I'm working on a healthcare data platform for a US healthcare organization opera
 The main challenge was that data came from different sources and at different frequencies. Our primary source is an on-premises PostgreSQL OLTP system containing operational data such as members, providers, encounters, claims and procedures. These tables are continuously updated throughout the day, so we extract changes incrementally every four hours. Vendor files such as claims adjudication and prior authorization are delivered daily to ADLS, while reference data such as ICD, CPT and fee schedules may arrive monthly or annually.
 </p>
   <span style="color: #0078D4;"> Objective:</span>
-  <p>
-The objective of our project is to build a centralized cloud data platform that can ingest these different sources, standardize and integrate the data, and provide reliable business-ready datasets to downstream teams. We used Databricks with  Medallion architecture for clear seperation of raw ingestion, data cleansing and business transformations
-  </p>
+  <p> The objective of our project is to consolidate data from different sources and build a centralized cloud data platform that provides reliable, business-ready datasets to downstream BI and analytics teams.<br>
+We built this platform on Azure Databricks using the Medallion architecture — bronze for raw ingestion, silver for cleansing and conforming, and gold for business-level transformations
+
+<br> This gives us clear separation of concerns and makes the platform easier to maintain and scale.  </p>
     <span style="color: #0078D4;"> Layers </span><br>
   <p>
 Bronze holds raw, replayable source data. The core PostgreSQL pipelines run every four hours using incremental extraction, while file-based sources are processed as per their delivery schedules, and all Bronze data is stored as Parquet. Silver standardizes schemas and data types, applies data-quality validations and deduplication, and incrementally merges changes into cumulative Delta tables. Gold contains business-ready fact and dimension data for downstream consumption.
@@ -239,6 +238,18 @@ The Bronze layer preserves raw source data in Parquet format, applying only mini
                 q: `High Level`,
                 a: ``,
                 children: [
+                    {
+                        q:`What downstream do / Whats point of platform apart from Consolidatiob`,
+                        a:` "Downstream teams use the data for reporting and analytics — claims analysis like accounts receivable, overall denial rate, and denial rate per CPT — plus operations, quality metrics.<br>
+I'm not directly involved in those analyses. My role is to make sure the data they receive is accurate and timely. `,
+                        children:[
+                            {
+                                q:`Denial per CPT ?`,
+                                a:` Denial rate per CPT means the percentage of claims denied for each procedure code. It helps identify which procedures have high denial rates so the revenue cycle team can investigate and fix the root cause — whether it's coding, documentation, or payer-specific rules.`,
+                                children:[],
+                            }
+                        ],
+                    },
                     {
                         q: `Why medallion `,
                         a: ` <ul> <li>Our data came from multiple sources—an on-prem PostgreSQL database, daily CSV extracts, and monthly/annual reference files , each has different formats, refresh frequencies.</li>
@@ -1946,12 +1957,12 @@ I validate Gold against Silver, review recent pipeline runs, and determine wheth
 <code>Contribution</code> One of my biggest contributions was optimizing long-running Gold layer jobs. <li>I diagnosed bottlenecks using Spark UI and implemented broadcast hints for small reference tables, Z-ORDER for faster MERGEs, and OPTIMIZE for file compaction — bringing runtime down by 40–45%.</li><li> That directly improved data availability for downstream analytics and reporting teams.</li> <hr> <br>
 <code>Challenges:</code> One significant challenge was Gold layer performance — it's where all the heavy lifting happens, SCD Type 2 MERGEs on dimension tables and upserts on fact tables.
 <br><hr>
-Initially, the Gold layer jobs were running for 50-55 mins and sometimes taking much longer than expected. I opened the Spark UI and started analyzing the execution plans. 
+Initially, the Gold layer jobs were running around 50 mins and sometimes taking much longer than expected. Few months back it spiked and running at 1;20 to 30 mins. I opened the Spark UI and started analyzing the execution plans. 
 <br> <span style="color: #0078D4;"><b >I Found 3 root causes: </b></span>
 <ul>
-<li>First — <span style="color: #0ae71c;"><b>MERJoinss</b></span> were doing full TARGET table scans. when i checked in spark ui and then execution plan of long running query the number of files read is almost same as num of files in table which means every file had a wide min/max range, so Delta couldn't skip irrelevant files when hunting for matching keys.I applied ZORDER on the MERGE join column on target  Gold tables — tightening per-file stats so Delta skips files that can't contain matching keys, reducing target file reads and MERGE execution time significantly.  <li>
-<li>Second — Another thing is <pre>spark ui=> long running query =>exec plan => size of files read/ no.of files read and saw KBs </pre>. daily MERGEs were accumulating small files over time. Aggregation queries were opening hundreds of small files instead of a few large ones  Periodic <span style="color: #0ae71c;"><b>OPTIMIZE</b></span>  compacted them and reduced the file count Spark had to scan which improved the <b>schedular Efficiency</b>  </li>
-<li> Third — and most impactful — multiple joins between fact and dimension tables were all going through SortMerge, causing heavy shuffle. I checked table sizes in Spark UI and found one reference dimension was around 20 MB — just above the <b>default 10 MB auto-broadcast threshold</b>, so Spark wasn't picking it up automatically. I added an explicit <span style="color: #0ae71c;"><b>Broadcast HINT</b></span> , which eliminated the shuffle entirely — that table got sent to every executor once and the join happened locally. Immediately visible in the execution plan." </li>
+<li>First — <span style="color: #0ae71c;"><b>MERGEs</b></span> were doing full target table scans. In the Spark UI, SQL/DF TAB => Longest running query => scan node => <code> the number of files read </code>was almost the same as the total files in the table(using describe detailof table) — meaning every file had a wide min/max range, so Delta couldn't skip irrelevant files when hunting for matching keys. I applied Z-ORDER on the MERGE join column on the target Gold tables, which tightened per-file stats. Delta could then skip files that couldn't contain matching keys — reducing target file reads and MERGE time significantly.</li>
+<li>Second — <span style="color: #0ae71c;">daily MERGEs were accumulating small files</span> <code>spark ui=> long running query =>exec plan => size of files read/ no.of files read and saw KBs in stead of few large files</code>. Aggregation queries were opening hundreds of small files instead of a few large ones  Periodic <span style="color: #0ae71c;"><b>OPTIMIZE</b></span>  compacted them and reduced the file count Spark had to scan which improved the <b>schedular Efficiency</b>  </li>
+<li> Third — and most impactful — multiple fact-to-dimension joins were all going through SortMergeJoin, causing heavy shuffle.  I checked table sizes in Spark UI and found one reference dimension was around 20 MB — just above the <b>default 10 MB auto-broadcast threshold</b>, so Spark wasn't picking it up automatically. I added an explicit <span style="color: #0ae71c;"><b>Broadcast HINT</b></span> , which eliminated the shuffle entirely — that table got sent to every executor once and the join happened locally. Immediately visible in the execution plan." </li>
 <li>The combination of these three — Z-ORDER for data skipping on MERGEs, OPTIMIZE for file compaction , and broadcast hint for the small dimension table joins — brought down the overall Gold layer runtime to 35-40 mins there by reducing the runtime by 40–45% </li>
 </li>
 <pre><code class="language-sql">
@@ -1968,7 +1979,20 @@ VACUUM sales_data RETAIN 168 HOURS -- scheduled separately with appropriate rete
 `,
         tip: `Contributions = what you actively did/built <br>
 Achievements = the measurable outcome/impact of what you did`,
-        children: [],
+        children: [
+            {
+                q:`ISN'T aqe HELPS THAT TIME`,
+                a:`AQE helps, but it's not a silver bullet. It handles partition coalescing, skew joins, and runtime SortMerge-to-Broadcast conversion — but only under certain conditions. Three things limited it in our case:<br>
+                <ul>
+                <li> First — Z-ORDER. AQE Optimizes query execution , not storage layout. Wide min/max ranges still caused full file scans during MERGE. Z-ORDER is a storage-level fix — AQE can't substitute for it.</li>
+                 <li>Second — small files. AQE's coalescePartitions merges partitions, but it doesn't compact files on disk. Hundreds of small files still meant high I/O. OPTIMIZE fixes the storage layer.</li>
+                  <li> Third — broadcast join. AQE converts to BroadcastHashJoin only if the table is below the threshold. Our dimension was 20 MB — above the 10 MB default. AQE respects that threshold; it doesn't override it. So I added an explicit hint.  </li>
+                </ul>
+                
+                In short — AQE optimizes the query, not the storage. That's why manual intervention was needed.`,
+                children:[],
+            }
+        ],
     },
 
     ////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////// new 
